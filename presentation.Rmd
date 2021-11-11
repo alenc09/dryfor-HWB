@@ -1,0 +1,84 @@
+---
+title: "Forest proximate people... in Caatinga"
+subtitle: 
+author: "Lucas Alenar"
+institute: "UFPE"
+date: "12/11/2021"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+      ratio: "16:9"
+---
+```{r, include=FALSE} 
+#library
+library(raster)
+library(geobr)
+library(dplyr)
+library(here)
+library(sf)
+library(ggplot2)
+load(here(".RData"))
+```
+
+class: inverse
+#data
+
+- [World Pop](https://www.worldpop.org/): Constrained data
+  - People per pixel
+  - ~3arc seconds (aprox. 100m at equator)
+
+--
+
+- [Forested Plots](https://www.science.org/doi/10.1126/science.aam6527)
+  - Each plot classified as forest (>20% of tree cover) and non-forest
+  - 6,200 plots in Caatinga, but 1,606 forested
+
+--
+
+- Caatinga shape
+  - From Geobr
+  - 2019 delimitation
+
+---
+#steps to calculate forest proximate people
+class: inverse
+```{r, eval= F, include=T}
+raster(x = here("data/bra_ppp_2020_UNadj_constrained.tif")) -> br_pop
+
+```
+
+```{r echo=FALSE,}
+plot(br_pop)
+```
+
+---
+## crop and Change the pixel size
+- from ~100x100m to ~1000x1000m
+```{r, eval=F}
+raster::crop(x = br_pop, y = caat_shp_wgs84_sp) -> br_pop_crop
+raster::mask(x = br_pop_crop, mask = caat_shp_wgs84_sp) -> pop_caat_wgs84 #filtering only population in Caatinga
+aggregate(x = pop_caat_wgs84, fact = 10, fun = sum) ->pop_caat_wgs84_1000
+```
+```{r echo=F, fig.height=6, fig.width=7}
+plot(pop_caat_wgs84)
+plot(pop_caat_wgs84_1000)
+```
+
+---
+### split rural/urban pixels
+- OECD: 150people/km² considered urban
+- In our pixel size: 130people/km²
+```{r, eval=FALSE}
+pop_caat_polybr_1000[is.na(pop_caat_polybr_1000)] <- 0 #change "no data" to zero population
+pop_caat_polybr_1000 -> pop_caat_rural_polybr
+pop_caat_rural_polybr[pop_caat_rural_polybr > 130] <- 0
+```
+```{r, echo=F, fig.height=5, fig.width=6}
+plot(pop_caat_polybr_1000 > 130, main = "all caatinga population")
+plot(pop_caat_polybr_1000 < 130 & pop_caat_polybr_1000 > 0, main = "rural caatinga population")
+```
+
