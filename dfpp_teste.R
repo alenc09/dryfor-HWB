@@ -9,6 +9,7 @@ library(here)
 library(sf)
 library(ggplot2)
 
+
 #data----
 read_biomes(simplified = F) %>%
   filter(name_biome == "Caatinga") %>%
@@ -34,7 +35,8 @@ aggregate(x = pop_caat_wgs84, fact = 10, fun = sum) ->pop_caat_wgs84_1000
 raster::projectRaster(pop_caat_wgs84_1000, crs = proj_polyBR, method = "bilinear")-> pop_caat_polybr_1000
 pop_caat_polybr_1000[is.na(pop_caat_polybr_1000)] <- 0 #change "no data" to zero population
 pop_caat_polybr_1000 -> pop_caat_rural_polybr
-pop_caat_rural_polybr[pop_caat_rural_polybr < 130] <- 0 #excluding urban areas
+pop_caat_rural_polybr[pop_caat_rural_polybr > 130] <- 0 #excluding urban areas
+pop_caat_wgs84[is.na(pop_caat_wgs84)] <- 0
 
 ###data to points----
 raster::rasterToPoints(pop_caat_polybr_1000) %>% 
@@ -42,6 +44,9 @@ raster::rasterToPoints(pop_caat_polybr_1000) %>%
 
 raster::rasterToPoints(pop_caat_rural_polybr) %>% 
   tibble::as_tibble() ->pop_caat_rural_tibble
+
+raster::rasterToPoints(br_pop) %>% 
+  tibble::as_tibble() ->br_pop_tibble
 
 ##plots----
 df_plots %>% #filtering only plots in Caatinga
@@ -109,6 +114,11 @@ c(people_rural_5km, people_5km) -> pop5km
 c(people_rural_10km, people_10km) -> pop10km
 cbind(Population, pop1km, pop5km, pop10km)-> df_results
 
+df_results%>%
+  as_tibble()->df_results
+df_results$pop1km<- as.numeric(df_results$pop1km)
+df_results$pop5km<- as.numeric(df_results$pop5km)
+df_results$pop10km<- as.numeric(df_results$pop10km)
 
 # data visualization ----
 
@@ -122,7 +132,7 @@ plot(pop_caat_polybr_1000 < 130 & pop_caat_polybr_1000 > 0)
 #plot(plot_caat_polybr, add = T)
 
 ggplot() +
-  geom_raster(data = pop_caat_rural_tibble, aes(x=x, y=y, fill=pop_caat_polybr_1000))+
+  geom_raster(data = pop_caat_rural_tibble, aes(x=x, y=y, fill=bra_ppp_2020_UNadj_constrained))+
   geom_sf(data = caat_shp_polybr, fill= NA, colour = "black", size = .3) +
   geom_sf(data = plot_caat_polybr, size =0.1) +
   geom_sf(data=st_as_sf(buff_1km_union), fill = NA, col = "red") +
@@ -134,7 +144,7 @@ ggplot() +
         ) -> caat_pop_rural.fig
 
 ggplot() +
-  geom_raster(data = pop_caat_rural_tibble, aes(x=x, y=y, fill=pop_caat_polybr_1000))+
+  geom_raster(data = pop_caat_rural_tibble, aes(x=x, y=y, fill=bra_ppp_2020_UNadj_constrained))+
   geom_sf(data = caat_shp_polybr, fill= NA, colour = "black", size = .3) +
   geom_sf(data = plot_caat_polybr, size =0.1) +
   geom_sf(data=st_as_sf(buff_1km_union), fill = NA, col = "red") +
@@ -148,7 +158,7 @@ ggplot() +
   )
 
 ggplot() +
-  geom_raster(data = pop_caat_tibble, aes(x=x, y=y, fill=pop_caat_polybr_1000))+
+  geom_raster(data = pop_caat_tibble, aes(x=x, y=y, fill=bra_ppp_2020_UNadj_constrained))+
   geom_sf(data = caat_shp_polybr, fill= NA, colour = "black", size = .3) +
   geom_sf(data = plot_caat_polybr, size =0.1) +
   geom_sf(data=st_as_sf(buff_1km_union), fill = NA, col = "red") +

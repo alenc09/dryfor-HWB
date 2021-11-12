@@ -44,15 +44,12 @@ class: inverse
   - 2019 delimitation
 
 ---
+class: inverse, center
 #steps to calculate forest proximate people
-class: inverse
-```{r, eval= F, include=T}
-raster(x = here("data/bra_ppp_2020_UNadj_constrained.tif")) -> br_pop
-
-```
-
-```{r echo=FALSE,}
-plot(br_pop)
+```{r echo=FALSE,fig.height=8, fig.width=9}
+geobr::read_country()%>%
+  plot(lwd = 1)
+plot(br_pop, add=T)
 ```
 
 ---
@@ -63,13 +60,19 @@ raster::crop(x = br_pop, y = caat_shp_wgs84_sp) -> br_pop_crop
 raster::mask(x = br_pop_crop, mask = caat_shp_wgs84_sp) -> pop_caat_wgs84 #filtering only population in Caatinga
 aggregate(x = pop_caat_wgs84, fact = 10, fun = sum) ->pop_caat_wgs84_1000
 ```
+
+---
 ```{r echo=F, fig.height=6, fig.width=7}
-plot(pop_caat_wgs84)
-plot(pop_caat_wgs84_1000)
+plot(pop_caat_wgs84, main = "~100x100m")
+plot(caat_shp_wgs84$geom, lwd = 1, add = T)
+
+plot(pop_caat_wgs84_1000, main = "~1000x1000m")
+plot(caat_shp_wgs84$geom, lwd = 1, add = T)
+
 ```
 
 ---
-### split rural/urban pixels
+## split rural/urban pixels
 - OECD: 150people/km² considered urban
 - In our pixel size: 130people/km²
 ```{r, eval=FALSE}
@@ -77,8 +80,61 @@ pop_caat_polybr_1000[is.na(pop_caat_polybr_1000)] <- 0 #change "no data" to zero
 pop_caat_polybr_1000 -> pop_caat_rural_polybr
 pop_caat_rural_polybr[pop_caat_rural_polybr > 130] <- 0
 ```
-```{r, echo=F, fig.height=5, fig.width=6}
-plot(pop_caat_polybr_1000 > 130, main = "all caatinga population")
+
+---
+## Location of "rural" population in Caatinga
+```{r, echo=F, fig.height=6, fig.width=7}
+plot(pop_caat_polybr_1000 > 130, main = "urban caatinga population")
 plot(pop_caat_polybr_1000 < 130 & pop_caat_polybr_1000 > 0, main = "rural caatinga population")
+```
+
+---
+class: inverse, center
+## Forested plots in Caatinga (n = 1,606)
+```{r, echo=F, fig.height=8, fig.width=9, warning=F}
+plot(caat_shp_polybr$geom)
+plot(plot_caat_polybr, type = 'p', add = T)
+```
+
+---
+class: inverse, center
+## 10km buffer with union functions
+```{r, echo=F, fig.height=8, fig.width=9}
+plot(caat_shp_polybr$geom)
+plot(buff_10km_union, add = T)
+```
+
+---
+class: inverse, center
+## Zoom in the NE of Caatinga
+```{r echo=F, fig.height=8, fig.width=9, warning=FALSE}
+ggplot() +
+  geom_raster(data = pop_caat_rural_tibble, aes(x=x, y=y, fill=bra_ppp_2020_UNadj_constrained))+
+  geom_sf(data = caat_shp_polybr, fill= NA, colour = "black", size = .3) +
+  geom_sf(data = plot_caat_polybr, size =0.1) +
+  geom_sf(data=st_as_sf(buff_1km_union), fill = NA, col = "red") +
+  geom_sf(data=st_as_sf(buff_5km_union), fill = NA, col = "red") +
+  geom_sf(data=st_as_sf(buff_10km_union), fill = NA, col = "red") +
+  coord_cartesian(xlim = c(6500000,7000000), ylim = c(9000000,9500000))+
+  coord_sf(xlim = c(6800000,7000000), ylim = c(9000000,9200000))+
+  scale_fill_viridis_c(name = "Rural population in Caatinga") +
+  theme(panel.background = element_blank(),
+        axis.title = element_blank()
+  )
+```
+
+---
+## Sum of people inside buffers
+```{r, eval=FALSE}
+raster::extract(x = pop_caat_rural_polybr,
+                y = buff_1km_union,
+                fun = sum,
+                na.rm = FALSE) -> people_rural_1km
+```
+
+---
+```{r echo=FALSE}
+
+kableExtra::kable(df_results)
 ```
 
