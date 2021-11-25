@@ -6,8 +6,9 @@ library(here)
 library(dplyr)
 library(raster)
 library(sf)
+library(ggplot2)
 
-# Data manipulation----
+# Data ----
 df_plots %>% #filtering only plots in Caatinga
   filter(
     location_x >= -45.07814 & location_x <= -35.06698,
@@ -20,45 +21,10 @@ st_as_sf(
   crs = 4326
 ) -> all_plots_caat_points
 
-raster(x="E:/lucas_alencar/downloads/mapbiomas-brazil-collection-50-2015.tif")-> mapbiomas_caat
-
-list.files(path = "E:/lucas_alencar/downloads/grade_ibge_caatinga", pattern = "\\.shp$", full.names = T)-> list_grid
-lapply(list_grid,read_sf)-> list_grid_sf
-do.call(rbind, list_grid_sf)-> grid_pop_ibge
-
-## Caatinga LU map reclass ----
-matrix(
-  c(3,1,
-    4,1,
-    5,1,
-    9,1,
-    11,1,
-    12,1,
-    32,1,
-    29,1,
-    13,1,
-    15,0,
-    39,0,
-    20,0,
-    41,0,
-    36,0,
-    21,0,
-    23,0,
-    24,0,
-    30,0,
-    25,0,
-    33,0,
-    31,0,
-    27,0),
-  ncol = 2, byrow = T)-> rcl
-
-mapbiomas_caat%>%
-  reclassify(rcl = rcl)->NVCmapb_caat
-
-raster::projectRaster(from = NVCmapb_caat, crs = proj_polyBR, method = "ngb")-> NVCmapb_caat_polybr
-geobr::
+raster(x=here("data/mapbiomas-brazil-collection-50-2015_5880.tif"))-> mapbiomas_caat
 
 # analysis ----
+## forested plots vs mapbiomas land-use ----
 all_plots_caat_points%>%
   mutate(land_use_mapb = raster::extract(x = mapbiomas_caat, y= .))%>%
   mutate(land_use_mapb = case_when(
@@ -84,14 +50,65 @@ all_plots_caat_points%>%
     land_use_mapb== 33 ~ "river",
     land_use_mapb== 31 ~ "aquiculture",
     land_use_mapb== 27 ~ "non_obs"
-    ))%>%
+  ))%>%
   filter(land_use_mapb != is.na(.$land_use_mapb))%>%
-  glimpse ->dfplts_mapb_caat
+  glimpse-> plotdf_mapb
 
-## mapbiomas vs bastin samples ----
+plotdf_mapb%>%
+  filter(land_use_category == "forest")%>%
+  group_by(land_use_mapb)%>%
+  dplyr::summarise(land_use_count = n())%>%
+  glimpse-> forest_mapblu
 
+## forest cover by buffer ----
+rcl<- matrix(c(3,1,
+               4,1,
+               5,1,
+               9,0,
+               11,1,
+               12,1,
+               32,1,
+               29,1,
+               13,1,
+               15,0,
+               39,0,
+               20,0,
+               41,0,
+               36,0,
+               21,0,
+               23,0,
+               24,0,
+               30,0,
+               25,0,
+               33,0,
+               31,0,
+               27,0
+),
+ncol = 2, byrow = T)
+reclassify(x = mapbiomas_caat, rcl = rcl)-> caat_nvc
+raster::extract(x = caat_nvc,
+                y = buff_1km_union,
+                fun = sum,
+                na.rm = FALSE) -> forest_1km
+raster::extract(x = caat_nvc,
+                y = buff_5km_union,
+                fun = sum,
+                na.rm = FALSE) -> forest_5km
+raster::extract(x = caat_nvc,
+                y = buff_10km_union,
+                fun = sum,
+                na.rm = FALSE) -> forest_10km
 # data visualization ----
-plot(grip_pop_ibge)
+forest_mapblu%>%
+  ggplot(aes(x = factor(land_use_mapb, 
+                        levels = land_use_mapb[order(land_use_count,
+                                                     decreasing = TRUE)]
+  ),
+  y = land_use_count
+  )
+  ) +
+  xlab(label = "Land use - Mapbiomas") + ylab(label = "Number of forested plots")+
+  geom_col() -> freq_forest_landuse
 
 # data export ----
 write.csv(x = all_plots_caat, file = "E:/lucas_alencar/downloads/all_plots_caat.csv")
