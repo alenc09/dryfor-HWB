@@ -30,7 +30,15 @@ class: inverse
 - [World Pop](https://www.worldpop.org/): Constrained data
   - People per pixel
   - ~3arc seconds (aprox. 100m at equator)
-
+  - data from 2020
+- [LandScan](https://landscan.ornl.gov/)
+  - People per pixel
+  - 1km at equator
+  - data from 2010, 2015, 2019
+- [IBGE Grade Estatística](https://geoftp.ibge.gov.br/recortes_para_fins_estatisticos/grade_estatistica/censo_2010/grade_estatistica.pdf)
+  - People per "pixel"
+  - 1km x 1km
+  - data from 2010 census
 --
 
 - [Forested Plots](https://www.science.org/doi/10.1126/science.aam6527)
@@ -124,6 +132,7 @@ ggplot() +
 ```
 
 ---
+class: inverse, center
 ## Sum of people inside buffers
 ```{r, eval=FALSE}
 raster::extract(x = pop_caat_rural_polybr,
@@ -133,8 +142,51 @@ raster::extract(x = pop_caat_rural_polybr,
 ```
 
 ---
+class:inverse, center
 ```{r echo=FALSE}
 
 kableExtra::kable(df_results)
+```
+
+---
+class:inverse
+background-image: url(E:/lucas_alencar/downloads/grid_bastin.jpg)
+background-size: 800px
+background-position: 50% 50%
+
+# Bastin et al Samples of forest cover in drylands
+
+---
+class:inverse
+background-image: url(E:/lucas_alencar/downloads/grid_bastin_sanharo.jpg)
+background-size: 800px
+background-position: 50% 50%
+
+#Closer look at Sanharó
+
+---
+class:inverse
+
+# frequency of forested plots in mapbiomas land cover categories
+```{r}
+freq_forest_landuse
+```
+
+---
+class:inverse
+
+#% of forest (Mapbiomas) inside each buffer
+```{r echo=FALSE}
+kableExtra::kable(df_forest_result)
+
+```
+
+---
+class:inverse
+
+# Population closed to forest by different datasets
+```{r echo=FALSE}
+kableExtra::kable(df_pop_all)
+
 ```
 

@@ -7,6 +7,7 @@ library(dplyr)
 library(raster)
 library(sf)
 library(ggplot2)
+library(data.table)
 
 # Data ----
 df_plots %>% #filtering only plots in Caatinga
@@ -22,6 +23,10 @@ st_as_sf(
 ) -> all_plots_caat_points
 
 raster(x=here("data/mapbiomas-brazil-collection-50-2015_5880.tif"))-> mapbiomas_caat
+
+list.files(path = "E:/lucas_alencar/downloads/grade_ibge_caatinga", pattern="\\.shp$", full.names=TRUE)%>%
+  lapply(X = .,read_sf)%>%
+  do.call(what = rbind)-> ibge_pop_caat
 
 # analysis ----
 ## forested plots vs mapbiomas land-use ----
@@ -83,9 +88,11 @@ rcl<- matrix(c(3,1,
                33,0,
                31,0,
                27,0
-),
-ncol = 2, byrow = T)
+               ),
+             ncol = 2, byrow = T)
+
 reclassify(x = mapbiomas_caat, rcl = rcl)-> caat_nvc
+
 raster::extract(x = caat_nvc,
                 y = buff_1km_union,
                 fun = sum,
@@ -98,6 +105,7 @@ raster::extract(x = caat_nvc,
                 y = buff_10km_union,
                 fun = sum,
                 na.rm = FALSE) -> forest_10km
+
 # data visualization ----
 forest_mapblu%>%
   ggplot(aes(x = factor(land_use_mapb, 
