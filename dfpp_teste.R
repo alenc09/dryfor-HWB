@@ -112,7 +112,7 @@ c("rural only", "total")-> Population
 c(people_rural_1km, people_1km) -> pop1km
 c(people_rural_5km, people_5km) -> pop5km
 c(people_rural_10km, people_10km) -> pop10km
-cbind(Population, pop1km, pop5km, pop10km)-> df_results
+data.frame(Population, pop1km, pop5km, pop10km)-> df_results
 
 df_results%>%
   as_tibble()->df_results
@@ -173,3 +173,4 @@ ggplot() +
 
 #data export----
 writeRaster(x = pop_caat_polybr_1000, filename = here("data/pop_caat_polybr_1000.tif"))
+st_write(obj = caat_shp, dsn = "D:/lucas_alencar/downloads/caat_shp.shp")

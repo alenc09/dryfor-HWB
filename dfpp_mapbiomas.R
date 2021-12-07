@@ -9,6 +9,7 @@ library(sf)
 library(ggplot2)
 library(data.table)
 
+
 # Data ----
 df_plots %>% #filtering only plots in Caatinga
   filter(
@@ -24,9 +25,32 @@ st_as_sf(
 
 raster(x=here("data/mapbiomas-brazil-collection-50-2015_5880.tif"))-> mapbiomas_caat
 
-list.files(path = "E:/lucas_alencar/downloads/grade_ibge_caatinga", pattern="\\.shp$", full.names=TRUE)%>%
+list.files(path = "E:/lucas_alencar/downloads/grade_ibge_caatinga", pattern="//.shp$", full.names=TRUE)%>%
   lapply(X = .,read_sf)%>%
   do.call(what = rbind)-> ibge_pop_caat
+st_intersection(x = ibge_pop_caat, y = caat_shp) -> ibge_pop_caat_clip
+st_centroid(ibge_pop_caat_clip) -> cent_popibge
+
+raster(x=here("data/caat_nvc.tif"))-> caat_nvc
+
+raster(x="D:/lucas_alencar/downloads/caat_pop_landscan_2010.tif") ->caat_pop_landscan_sirgas2000
+raster(x="D:/lucas_alencar/downloads/caat_pop_landscan_2019.tif") ->caat_pop_landscan_sirgas2000_2019
+
+## data transformation ----
+buff_1km_union%>%
+  st_as_sf()%>%
+  st_transform(crs = 4674) -> buff_1km_union_sigas2000
+
+buff_5km_union%>%
+  st_as_sf()%>%
+  st_transform(crs = 4674)-> buff_5km_union_sigas2000
+
+buff_10km_union%>%
+  st_as_sf()%>%
+  st_transform(crs = 4674)-> buff_10km_union_sigas2000
+
+caat_pop_landscan_sirgas2000[is.na(caat_pop_landscan_sirgas2000)] <- 0
+caat_pop_landscan_sirgas2000_2019[is.na(caat_pop_landscan_sirgas2000_2019)] <- 0
 
 # analysis ----
 ## forested plots vs mapbiomas land-use ----
@@ -91,7 +115,9 @@ rcl<- matrix(c(3,1,
                ),
              ncol = 2, byrow = T)
 
-reclassify(x = mapbiomas_caat, rcl = rcl)-> caat_nvc
+#reclassify(x = mapbiomas_caat, rcl = rcl)-> caat_nvc
+
+aggregate(x = caat_nvc, fact = 33, fun = "max") -> caat_nvc_1000
 
 raster::extract(x = caat_nvc,
                 y = buff_1km_union,
@@ -105,6 +131,62 @@ raster::extract(x = caat_nvc,
                 y = buff_10km_union,
                 fun = sum,
                 na.rm = FALSE) -> forest_10km
+
+## FPP by IBGE ----
+cent_popibge[buff_1km_union_sigas2000,] -> cent_included_1km
+sum(cent_included_1km$POP)-> ibge_1km_cent
+cent_popibge[buff_5km_union_sigas2000,] -> cent_included_5km
+sum(cent_included_5km$POP)-> ibge_5km_cent
+cent_popibge[buff_10km_union_sigas2000,] -> cent_included_10km
+sum(cent_included_10km$POP)-> ibge_10km_cent
+
+st_intersection(x = ibge_pop_caat, y = buff_1km_union_sigas2000) -> ibge_1km
+sum(ibge_1km$POP)->ibgepop_1km
+st_intersection(x = ibge_pop_caat, y = buff_5km_union_sigas2000) -> ibge_5km
+sum(ibge_5km$POP)->ibgepop_5km
+st_intersection(x = ibge_pop_caat, y = buff_10km_union_sigas2000) -> ibge_10km
+sum(ibge_10km$POP)->ibgepop_10km
+
+## FPP by Landscan ----
+### 2010 ----
+raster::extract(x = caat_pop_landscan_sirgas2000,
+                y = buff_1km_union_sigas2000,
+                fun = sum,
+                na.rm = FALSE) -> landscanpop_1km
+
+raster::extract(x = caat_pop_landscan_sirgas2000,
+                y = buff_5km_union_sigas2000,
+                fun = sum,
+                na.rm = FALSE) -> landscanpop_5km
+
+raster::extract(x = caat_pop_landscan_sirgas2000,
+                y = buff_10km_union_sigas2000,
+                fun = sum,
+                na.rm = FALSE) -> landscanpop_10km
+
+###2019 ----
+raster::extract(x = caat_pop_landscan_sirgas2000_2019,
+                y = buff_1km_union_sigas2000,
+                fun = sum,
+                na.rm = FALSE) -> landscanpop_1km_2019
+
+raster::extract(x = caat_pop_landscan_sirgas2000_2019,
+                y = buff_5km_union_sigas2000,
+                fun = sum,
+                na.rm = FALSE) -> landscanpop_5km_2019
+
+raster::extract(x = caat_pop_landscan_sirgas2000_2019,
+                y = buff_10km_union_sigas2000,
+                fun = sum,
+                na.rm = FALSE) -> landscanpop_10km_2019
+
+#results
+c("IBGE - 2010",  "Landscan - 2010", "Landscan - 2019", "WorldPop - 2020") -> source
+c(round(ibgepop_1km), round(landscanpop_1km), round(landscanpop_1km_2019), round(pop1km[2])) -> buffer_1km
+c(round(ibgepop_5km), round(landscanpop_5km), round(landscanpop_5km_2019), round(pop5km[2])) -> buffer_5km
+c(round(ibgepop_10km), round(landscanpop_10km), round(landscanpop_10km_2019), round(pop10km[2])) -> buffer_10km
+data.frame(source, buffer_1km, buffer_5km, buffer_10km)-> df_pop_all
+glimpse(df_pop_all)
 
 # data visualization ----
 forest_mapblu%>%
@@ -120,3 +202,4 @@ forest_mapblu%>%
 
 # data export ----
 write.csv(x = all_plots_caat, file = "E:/lucas_alencar/downloads/all_plots_caat.csv")
+writeRaster(x = caat_nvc, filename = here("data/caat_nvc.tif"))

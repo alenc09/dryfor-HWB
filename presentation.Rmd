@@ -3,7 +3,7 @@ title: "Forest proximate people... in Caatinga"
 subtitle: 
 author: "Lucas Alenar"
 institute: "UFPE"
-date: "12/11/2021"
+date: "12/11/2021 (updated: `r Sys.Date()`)"
 output:
   xaringan::moon_reader:
     lib_dir: libs
@@ -53,59 +53,6 @@ class: inverse
 
 ---
 class: inverse, center
-#steps to calculate forest proximate people
-```{r echo=FALSE,fig.height=8, fig.width=9}
-geobr::read_country()%>%
-  plot(lwd = 1)
-plot(br_pop, add=T)
-```
-
----
-## crop and Change the pixel size
-- from ~100x100m to ~1000x1000m
-```{r, eval=F}
-raster::crop(x = br_pop, y = caat_shp_wgs84_sp) -> br_pop_crop
-raster::mask(x = br_pop_crop, mask = caat_shp_wgs84_sp) -> pop_caat_wgs84 #filtering only population in Caatinga
-aggregate(x = pop_caat_wgs84, fact = 10, fun = sum) ->pop_caat_wgs84_1000
-```
-
----
-```{r echo=F, fig.height=6, fig.width=7}
-plot(pop_caat_wgs84, main = "~100x100m")
-plot(caat_shp_wgs84$geom, lwd = 1, add = T)
-
-plot(pop_caat_wgs84_1000, main = "~1000x1000m")
-plot(caat_shp_wgs84$geom, lwd = 1, add = T)
-
-```
-
----
-## split rural/urban pixels
-- OECD: 150people/km² considered urban
-- In our pixel size: 130people/km²
-```{r, eval=FALSE}
-pop_caat_polybr_1000[is.na(pop_caat_polybr_1000)] <- 0 #change "no data" to zero population
-pop_caat_polybr_1000 -> pop_caat_rural_polybr
-pop_caat_rural_polybr[pop_caat_rural_polybr > 130] <- 0
-```
-
----
-## Location of "rural" population in Caatinga
-```{r, echo=F, fig.height=6, fig.width=7}
-plot(pop_caat_polybr_1000 > 130, main = "urban caatinga population")
-plot(pop_caat_polybr_1000 < 130 & pop_caat_polybr_1000 > 0, main = "rural caatinga population")
-```
-
----
-class: inverse, center
-## Forested plots in Caatinga (n = 1,606)
-```{r, echo=F, fig.height=8, fig.width=9, warning=F}
-plot(caat_shp_polybr$geom)
-plot(plot_caat_polybr, type = 'p', add = T)
-```
-
----
-class: inverse, center
 ## 10km buffer with union functions
 ```{r, echo=F, fig.height=8, fig.width=9}
 plot(caat_shp_polybr$geom)
@@ -115,9 +62,9 @@ plot(buff_10km_union, add = T)
 ---
 class: inverse, center
 ## Zoom in the NE of Caatinga
-```{r echo=F, fig.height=8, fig.width=9, warning=FALSE}
+```{r echo=F, fig.height=8, fig.width=9, message=FALSE, warning=FALSE}
 ggplot() +
-  geom_raster(data = pop_caat_rural_tibble, aes(x=x, y=y, fill=bra_ppp_2020_UNadj_constrained))+
+  geom_raster(data = pop_caat_tibble, aes(x=x, y=y, fill=pop_caat_polybr_1000))+
   geom_sf(data = caat_shp_polybr, fill= NA, colour = "black", size = .3) +
   geom_sf(data = plot_caat_polybr, size =0.1) +
   geom_sf(data=st_as_sf(buff_1km_union), fill = NA, col = "red") +
@@ -125,24 +72,14 @@ ggplot() +
   geom_sf(data=st_as_sf(buff_10km_union), fill = NA, col = "red") +
   coord_cartesian(xlim = c(6500000,7000000), ylim = c(9000000,9500000))+
   coord_sf(xlim = c(6800000,7000000), ylim = c(9000000,9200000))+
-  scale_fill_viridis_c(name = "Rural population in Caatinga") +
+  scale_fill_viridis_c(name = "Population in Caatinga") +
   theme(panel.background = element_blank(),
         axis.title = element_blank()
   )
 ```
 
 ---
-class: inverse, center
-## Sum of people inside buffers
-```{r, eval=FALSE}
-raster::extract(x = pop_caat_rural_polybr,
-                y = buff_1km_union,
-                fun = sum,
-                na.rm = FALSE) -> people_rural_1km
-```
-
----
-class:inverse, center
+class: center
 ```{r echo=FALSE}
 
 kableExtra::kable(df_results)
@@ -150,40 +87,35 @@ kableExtra::kable(df_results)
 
 ---
 class:inverse
-background-image: url(E:/lucas_alencar/downloads/grid_bastin.jpg)
-background-size: 800px
+background-image: url(img/grid_bastin.jpg)
+background-size: contain
 background-position: 50% 50%
 
 # Bastin et al Samples of forest cover in drylands
 
 ---
 class:inverse
-background-image: url(E:/lucas_alencar/downloads/grid_bastin_sanharo.jpg)
-background-size: 800px
+background-image: url(img/grid_bastin_sanharo.jpg)
+background-size: contain
 background-position: 50% 50%
 
 #Closer look at Sanharó
 
 ---
-class:inverse
+class: inverse, center
 
-# frequency of forested plots in mapbiomas land cover categories
-```{r}
+# frequency of forested plots by mapbiomas land cover
+```{r echo=FALSE}
 freq_forest_landuse
 ```
 
 ---
-class:inverse
+class: inverse
 
-#% of forest (Mapbiomas) inside each buffer
-```{r echo=FALSE}
-kableExtra::kable(df_forest_result)
-
-```
+# % of forest (Mapbiomas) inside each buffer
+- Lack RAM memory
 
 ---
-class:inverse
-
 # Population closed to forest by different datasets
 ```{r echo=FALSE}
 kableExtra::kable(df_pop_all)
