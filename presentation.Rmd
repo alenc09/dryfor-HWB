@@ -146,3 +146,17 @@ kableExtra::kable(df_pop_all)
 
 ```
 
+---
+# What can I do with this data?
+
+--
+1. Evaluate uncertainty in FPP estimations
+
+--
+2. Change of FPP over time
+
+--
+3. Add socio-economic data to build a "profile" of FPP
+
+--
+4. Forget about it and focus on the other chapters
