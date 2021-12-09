@@ -31,7 +31,7 @@ list.files(path = "E:/lucas_alencar/downloads/grade_ibge_caatinga", pattern="//.
 st_intersection(x = ibge_pop_caat, y = caat_shp) -> ibge_pop_caat_clip
 st_centroid(ibge_pop_caat_clip) -> cent_popibge
 
-raster(x=here("data/caat_nvc.tif"))-> caat_nvc
+raster(x="D:/lucas_alencar/downloads/caat_nvc.tif")-> caat_nvc
 
 raster(x="D:/lucas_alencar/downloads/caat_pop_landscan_2010.tif") ->caat_pop_landscan_sirgas2000
 raster(x="D:/lucas_alencar/downloads/caat_pop_landscan_2019.tif") ->caat_pop_landscan_sirgas2000_2019
@@ -51,6 +51,12 @@ buff_10km_union%>%
 
 caat_pop_landscan_sirgas2000[is.na(caat_pop_landscan_sirgas2000)] <- 0
 caat_pop_landscan_sirgas2000_2019[is.na(caat_pop_landscan_sirgas2000_2019)] <- 0
+
+raster::aggregate(x = caat_nvc, fact=8, fun = max)-> caat_nvc_240m
+
+caat_nvc_240m%>%
+  raster::rasterToPoints()%>%
+  as_tibble()-> caat_nvc_240m_tibble
 
 # analysis ----
 ## forested plots vs mapbiomas land-use ----
@@ -117,17 +123,15 @@ rcl<- matrix(c(3,1,
 
 #reclassify(x = mapbiomas_caat, rcl = rcl)-> caat_nvc
 
-aggregate(x = caat_nvc, fact = 33, fun = "max") -> caat_nvc_1000
-
-raster::extract(x = caat_nvc,
+raster::extract(x = caat_nvc_240m,
                 y = buff_1km_union,
                 fun = sum,
                 na.rm = FALSE) -> forest_1km
-raster::extract(x = caat_nvc,
+raster::extract(x = caat_nvc_240m,
                 y = buff_5km_union,
                 fun = sum,
                 na.rm = FALSE) -> forest_5km
-raster::extract(x = caat_nvc,
+raster::extract(x = caat_nvc_240m,
                 y = buff_10km_union,
                 fun = sum,
                 na.rm = FALSE) -> forest_10km
@@ -188,6 +192,15 @@ c(round(ibgepop_10km), round(landscanpop_10km), round(landscanpop_10km_2019), ro
 data.frame(source, buffer_1km, buffer_5km, buffer_10km)-> df_pop_all
 glimpse(df_pop_all)
 
+forest_1km*(240*240)/10000-> forest_1km_ha
+forest_5km*(240*240)/10000-> forest_5km_ha
+forest_10km*(240*240)/10000-> forest_10km_ha
+caat_nvc_240m%>%
+  as.matrix()%>%
+  sum()%>%
+   `*`(240*240)/10000-> nvc_caat_ha
+forest_10km_ha/nvc_caat_ha
+
 # data visualization ----
 forest_mapblu%>%
   ggplot(aes(x = factor(land_use_mapb, 
@@ -200,6 +213,20 @@ forest_mapblu%>%
   xlab(label = "Land use - Mapbiomas") + ylab(label = "Number of forested plots")+
   geom_col() -> freq_forest_landuse
 
+ggplot() +
+  geom_raster(data = nvc_caat_ha, aes(x=x, y=y, fill=caat_nvc0))+
+  geom_sf(data = caat_shp_polybr, fill= NA, colour = "black", size = .3) +
+  geom_sf(data = plot_caat_polybr, size =0.1) +
+  geom_sf(data=st_as_sf(buff_1km_union), fill = NA, col = "red") +
+  geom_sf(data=st_as_sf(buff_5km_union), fill = NA, col = "red") +
+  geom_sf(data=st_as_sf(buff_10km_union), fill = NA, col = "red") +
+  coord_cartesian(xlim = c(6500000,7000000), ylim = c(9000000,9500000))+
+  coord_sf(xlim = c(6800000,7000000), ylim = c(9000000,9200000))+
+  scale_fill_viridis_d(name = "Population in Caatinga") +
+  theme(panel.background = element_blank(),
+        axis.title = element_blank()
+  )
 # data export ----
 write.csv(x = all_plots_caat, file = "E:/lucas_alencar/downloads/all_plots_caat.csv")
 writeRaster(x = caat_nvc, filename = here("data/caat_nvc.tif"))
+writeRaster(x = caat_nvc_240m, filename = "D:/lucas_alencar/downloads/caat_nvc_240.tif")

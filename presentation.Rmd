@@ -91,7 +91,7 @@ background-image: url(img/grid_bastin.jpg)
 background-size: contain
 background-position: 50% 50%
 
-# Bastin et al Samples of forest cover in drylands
+# **Bastin et al Samples of forest cover in drylands**
 
 ---
 class:inverse
@@ -99,7 +99,7 @@ background-image: url(img/grid_bastin_sanharo.jpg)
 background-size: contain
 background-position: 50% 50%
 
-#Closer look at Sanharó
+# **Closer look at Sanharó**
 
 ---
 class: inverse, center
@@ -110,10 +110,34 @@ freq_forest_landuse
 ```
 
 ---
-class: inverse
+# % of native vegetation (Mapbiomas) inside each buffer
 
-# % of forest (Mapbiomas) inside each buffer
-- Lack RAM memory
+.pull-left[
+
+- Lack RAM for 30m resolution analysis
+```{r echo = FALSE, warning=FALSE}
+raster(x="D:/lucas_alencar/downloads/caat_nvc.tif")-> caat_nvc
+plot(caat_nvc)
+```
+
+]
+
+.pull-rigth[
+
+- Aggregate forest cover to 240m resolution
+```{r echo = FALSE, warning=FALSE, fig.}
+raster(x="D:/lucas_alencar/downloads/caat_nvc_240.tif")-> caat_nvc_240m
+plot(caat_nvc_240m)
+```
+
+]
+
+---
+# Comparing bastin and mapbiomas dataset...
+- 1km buffer -> 0,6% Caatinga nvc by mapbiomas
+- 5km buffer -> 15%
+- 10km buffer -> 46%
+
 
 ---
 # Population closed to forest by different datasets
