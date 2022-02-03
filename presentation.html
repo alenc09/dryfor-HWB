@@ -4,7 +4,6 @@
     <title>Forest proximate people… in Caatinga</title>
     <meta charset="utf-8" />
     <meta name="author" content="Lucas Alenar" />
-    <meta name="date" content="2021-12-11" />
     <script src="libs/header-attrs-2.11/header-attrs.js"></script>
     <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
     <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
@@ -16,7 +15,7 @@ class: center, middle, inverse, title-slide
 # Forest proximate people… in Caatinga
 ### Lucas Alenar
 ### UFPE
-### 12/11/2021
+### 12/11/2021 (updated: 2021-12-09)
 
 ---
 
@@ -28,7 +27,15 @@ class: inverse
 - [World Pop](https://www.worldpop.org/): Constrained data
   - People per pixel
   - ~3arc seconds (aprox. 100m at equator)
-
+  - data from 2020
+- [LandScan](https://landscan.ornl.gov/)
+  - People per pixel
+  - 1km at equator
+  - data from 2010, 2015, 2019
+- [IBGE Grade Estatística](https://geoftp.ibge.gov.br/recortes_para_fins_estatisticos/grade_estatistica/censo_2010/grade_estatistica.pdf)
+  - People per "pixel"
+  - 1km x 1km
+  - data from 2010 census
 --
 
 - [Forested Plots](https://www.science.org/doi/10.1126/science.aam6527)
@@ -43,68 +50,16 @@ class: inverse
 
 ---
 class: inverse, center
-#steps to calculate forest proximate people
-![](presentation_files/figure-html/unnamed-chunk-2-1.png)&lt;!-- --&gt;
-
----
-## crop and Change the pixel size
-- from ~100x100m to ~1000x1000m
-
-```r
-raster::crop(x = br_pop, y = caat_shp_wgs84_sp) -&gt; br_pop_crop
-raster::mask(x = br_pop_crop, mask = caat_shp_wgs84_sp) -&gt; pop_caat_wgs84 #filtering only population in Caatinga
-aggregate(x = pop_caat_wgs84, fact = 10, fun = sum) -&gt;pop_caat_wgs84_1000
-```
-
----
-![](presentation_files/figure-html/unnamed-chunk-4-1.png)&lt;!-- --&gt;![](presentation_files/figure-html/unnamed-chunk-4-2.png)&lt;!-- --&gt;
-
----
-## split rural/urban pixels
-- OECD: 150people/km² considered urban
-- In our pixel size: 130people/km²
-
-```r
-pop_caat_polybr_1000[is.na(pop_caat_polybr_1000)] &lt;- 0 #change "no data" to zero population
-pop_caat_polybr_1000 -&gt; pop_caat_rural_polybr
-pop_caat_rural_polybr[pop_caat_rural_polybr &gt; 130] &lt;- 0
-```
-
----
-## Location of "rural" population in Caatinga
-![](presentation_files/figure-html/unnamed-chunk-6-1.png)&lt;!-- --&gt;![](presentation_files/figure-html/unnamed-chunk-6-2.png)&lt;!-- --&gt;
-
----
-class: inverse, center
-## Forested plots in Caatinga (n = 1,606)
-![](presentation_files/figure-html/unnamed-chunk-7-1.png)&lt;!-- --&gt;
-
----
-class: inverse, center
 ## 10km buffer with union functions
-![](presentation_files/figure-html/unnamed-chunk-8-1.png)&lt;!-- --&gt;
+![](presentation_files/figure-html/unnamed-chunk-2-1.png)&lt;!-- --&gt;
 
 ---
 class: inverse, center
 ## Zoom in the NE of Caatinga
-
-```
-## Coordinate system already present. Adding new coordinate system, which will replace the existing one.
-```
-
-![](presentation_files/figure-html/unnamed-chunk-9-1.png)&lt;!-- --&gt;
+![](presentation_files/figure-html/unnamed-chunk-3-1.png)&lt;!-- --&gt;
 
 ---
-## Sum of people inside buffers
-
-```r
-raster::extract(x = pop_caat_rural_polybr,
-                y = buff_1km_union,
-                fun = sum,
-                na.rm = FALSE) -&gt; people_rural_1km
-```
-
----
+class: center
 &lt;table&gt;
  &lt;thead&gt;
   &lt;tr&gt;
@@ -123,13 +78,112 @@ raster::extract(x = pop_caat_rural_polybr,
   &lt;/tr&gt;
   &lt;tr&gt;
    &lt;td style="text-align:left;"&gt; total &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 69284.075 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 69284.076 &lt;/td&gt;
    &lt;td style="text-align:right;"&gt; 2936156 &lt;/td&gt;
    &lt;td style="text-align:right;"&gt; 10643019.2 &lt;/td&gt;
   &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;
 
+---
+class:inverse
+background-image: url(img/grid_bastin.jpg)
+background-size: contain
+background-position: 50% 50%
+
+# **Bastin et al Samples of forest cover in drylands**
+
+---
+class:inverse
+background-image: url(img/grid_bastin_sanharo.jpg)
+background-size: contain
+background-position: 50% 50%
+
+# **Closer look at Sanharó**
+
+---
+class: inverse, center
+
+# frequency of forested plots by mapbiomas land cover
+![](presentation_files/figure-html/unnamed-chunk-5-1.png)&lt;!-- --&gt;
+
+---
+# % of native vegetation (Mapbiomas) inside each buffer
+
+.pull-left[
+
+- Lack RAM for 30m resolution analysis
+![](presentation_files/figure-html/unnamed-chunk-6-1.png)&lt;!-- --&gt;
+
+]
+
+.pull-rigth[
+
+- Aggregate forest cover to 240m resolution
+![](presentation_files/figure-html/fig.-1.png)&lt;!-- --&gt;
+
+]
+
+---
+# Comparing bastin and mapbiomas dataset...
+- 1km buffer -&gt; 0,6% Caatinga nvc by mapbiomas
+- 5km buffer -&gt; 15%
+- 10km buffer -&gt; 46%
+
+
+---
+# Population closed to forest by different datasets
+&lt;table&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; source &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; buffer_1km &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; buffer_5km &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; buffer_10km &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; IBGE - 2010 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 111857 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2754932 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 9222520 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Landscan - 2010 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 89082 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3070768 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 9861796 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Landscan - 2019 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 54209 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2723476 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 9580488 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; WorldPop - 2020 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 69284 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2936156 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 10643019 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+---
+# What can I do with this data?
+
+--
+1. Evaluate uncertainty in FPP estimations
+
+--
+2. Change of FPP over time
+
+--
+3. Add socio-economic data to build a "profile" of FPP
+
+--
+4. Forget about it and focus on the other chapters
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
