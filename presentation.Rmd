@@ -64,7 +64,7 @@ class: inverse, center
 ## Zoom in the NE of Caatinga
 ```{r echo=F, fig.height=8, fig.width=9, message=FALSE, warning=FALSE}
 ggplot() +
-  geom_raster(data = pop_caat_tibble, aes(x=x, y=y, fill=pop_caat_polybr_1000))+
+  geom_raster(data = pop_caat_tibble, aes(x=x, y=y, fill=bra_ppp_2020_UNadj_constrained))+
   geom_sf(data = caat_shp_polybr, fill= NA, colour = "black", size = .3) +
   geom_sf(data = plot_caat_polybr, size =0.1) +
   geom_sf(data=st_as_sf(buff_1km_union), fill = NA, col = "red") +
@@ -105,7 +105,7 @@ background-position: 50% 50%
 class: inverse, center
 
 # frequency of forested plots by mapbiomas land cover
-```{r echo=FALSE}
+```{r eval=FALSE, include=FALSE}
 freq_forest_landuse
 ```
 
@@ -115,7 +115,7 @@ freq_forest_landuse
 .pull-left[
 
 - Lack RAM for 30m resolution analysis
-```{r echo = FALSE, warning=FALSE}
+```{r eval=FALSE, warning=FALSE, include=FALSE}
 raster(x="D:/lucas_alencar/downloads/caat_nvc.tif")-> caat_nvc
 plot(caat_nvc)
 ```
@@ -125,7 +125,7 @@ plot(caat_nvc)
 .pull-rigth[
 
 - Aggregate forest cover to 240m resolution
-```{r echo = FALSE, warning=FALSE, fig.}
+```{r eval=FALSE, warning=FALSE, include=FALSE}
 raster(x="D:/lucas_alencar/downloads/caat_nvc_240.tif")-> caat_nvc_240m
 plot(caat_nvc_240m)
 ```
@@ -141,7 +141,7 @@ plot(caat_nvc_240m)
 
 ---
 # Population closed to forest by different datasets
-```{r echo=FALSE}
+```{r eval=FALSE, include=FALSE}
 kableExtra::kable(df_pop_all)
 
 ```
@@ -160,3 +160,40 @@ kableExtra::kable(df_pop_all)
 
 --
 4. Forget about it and focus on the other chapters
+
+---
+#The number and profile of forest proxiamte people in Caatinga
+
+--
+1. We already have an estimate: 2.9 million people within 5km
+
+2. The profile
+- 2.1 Forest-dependent people framework ([Newton et al, 2016](https://www.sciencedirect.com/science/article/pii/S0264837716300497?via%3Dihub))
+
+- 2.2 Multipoverty Index ([Aguilar & Sumner, 2020
+](https://www.sciencedirect.com/science/article/abs/pii/S0305750X19303651?via%3Dihub))
+
+---
+#The number and profile of forest proxiamte people in Caatinga
+- 2.3 Forest
+ - Bastin et al, 2018 (sample of forests in drylands)
+ - sensivity test with mapbiomas data
+
+- 2.4 Proximate ("dependent")
+ - 5km buffers (1 and 10km as sensivity test)
+ - Remoteness (how to calculate?)
+
+- 2.5 People
+ - Setor censitário 2010
+ - Variables from 2010 and forest sample from 2015
+ - try sensus tracs from censo agro 2017
+
+- 2.6 Check if the buffers around forests represents well the people inside sensus tracs
+ - and then if data from sensus tracs can represent socioeconomic characteristics of FPP
+
+---
+#Forest proximate vs away forest people
+
+Compare income between sensus tracts with and without forests
+
+- Use matching to find pairs

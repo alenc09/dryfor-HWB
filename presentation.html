@@ -15,7 +15,7 @@ class: center, middle, inverse, title-slide
 # Forest proximate people… in Caatinga
 ### Lucas Alenar
 ### UFPE
-### 12/11/2021 (updated: 2021-12-09)
+### 12/11/2021 (updated: 2022-02-10)
 
 ---
 
@@ -78,7 +78,7 @@ class: center
   &lt;/tr&gt;
   &lt;tr&gt;
    &lt;td style="text-align:left;"&gt; total &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 69284.076 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 69284.075 &lt;/td&gt;
    &lt;td style="text-align:right;"&gt; 2936156 &lt;/td&gt;
    &lt;td style="text-align:right;"&gt; 10643019.2 &lt;/td&gt;
   &lt;/tr&gt;
@@ -105,7 +105,7 @@ background-position: 50% 50%
 class: inverse, center
 
 # frequency of forested plots by mapbiomas land cover
-![](presentation_files/figure-html/unnamed-chunk-5-1.png)&lt;!-- --&gt;
+
 
 ---
 # % of native vegetation (Mapbiomas) inside each buffer
@@ -113,14 +113,14 @@ class: inverse, center
 .pull-left[
 
 - Lack RAM for 30m resolution analysis
-![](presentation_files/figure-html/unnamed-chunk-6-1.png)&lt;!-- --&gt;
+
 
 ]
 
 .pull-rigth[
 
 - Aggregate forest cover to 240m resolution
-![](presentation_files/figure-html/fig.-1.png)&lt;!-- --&gt;
+
 
 ]
 
@@ -133,42 +133,7 @@ class: inverse, center
 
 ---
 # Population closed to forest by different datasets
-&lt;table&gt;
- &lt;thead&gt;
-  &lt;tr&gt;
-   &lt;th style="text-align:left;"&gt; source &lt;/th&gt;
-   &lt;th style="text-align:right;"&gt; buffer_1km &lt;/th&gt;
-   &lt;th style="text-align:right;"&gt; buffer_5km &lt;/th&gt;
-   &lt;th style="text-align:right;"&gt; buffer_10km &lt;/th&gt;
-  &lt;/tr&gt;
- &lt;/thead&gt;
-&lt;tbody&gt;
-  &lt;tr&gt;
-   &lt;td style="text-align:left;"&gt; IBGE - 2010 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 111857 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 2754932 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 9222520 &lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;tr&gt;
-   &lt;td style="text-align:left;"&gt; Landscan - 2010 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 89082 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 3070768 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 9861796 &lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;tr&gt;
-   &lt;td style="text-align:left;"&gt; Landscan - 2019 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 54209 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 2723476 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 9580488 &lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;tr&gt;
-   &lt;td style="text-align:left;"&gt; WorldPop - 2020 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 69284 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 2936156 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 10643019 &lt;/td&gt;
-  &lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
+
 
 ---
 # What can I do with this data?
@@ -184,6 +149,43 @@ class: inverse, center
 
 --
 4. Forget about it and focus on the other chapters
+
+---
+#The number and profile of forest proxiamte people in Caatinga
+
+--
+1. We already have an estimate: 2.9 million people within 5km
+
+2. The profile
+- 2.1 Forest-dependent people framework ([Newton et al, 2016](https://www.sciencedirect.com/science/article/pii/S0264837716300497?via%3Dihub))
+
+- 2.2 Multipoverty Index ([Aguilar &amp; Sumner, 2020
+](https://www.sciencedirect.com/science/article/abs/pii/S0305750X19303651?via%3Dihub))
+
+---
+#The number and profile of forest proxiamte people in Caatinga
+- 2.3 Forest
+ - Bastin et al, 2018 (sample of forests in drylands)
+ - sensivity test with mapbiomas data
+
+- 2.4 Proximate ("dependent")
+ - 5km buffers (1 and 10km as sensivity test)
+ - Remoteness (how to calculate?)
+
+- 2.5 People
+ - Setor censitário 2010
+ - Variables from 2010 and forest sample from 2015
+ - try sensus tracs from censo agro 2017
+
+- 2.6 Check if the buffers around forests represents well the people inside sensus tracs
+ - and then if data from sensus tracs can represent socioeconomic characteristics of FPP
+
+---
+#Forest proximate vs away forest people
+
+Compare income between sensus tracts with and without forests
+
+- Use matching to find pairs
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
