@@ -23,9 +23,9 @@ read_xlsx("data/IBGE_filter_data.xlsx") -> sc_ibge_data
 read.csv(file = here("data/aam6527_Bastin_Database-S1.csv"),
          sep = ";") -> df_plots
 
-list.files(path = "E:/lucas_alencar/downloads/grade_ibge_caatinga", pattern="//.shp$", full.names=TRUE)%>%
+list.files(path = "D:/lucas_alencar/downloads/grade_ibge_caatinga", pattern=".shp$", full.names=TRUE)%>%
   lapply(X = .,read_sf)%>%
-  do.call(what = rbind)-> ibge_pop_caat
+  do.call(what = rbind)-> ibge_pop_ne
 
 ##transformation####
 sc_caat%>%
@@ -50,6 +50,8 @@ df_plots %>% #filtering only plots in Caatinga
     x = .,
     crs = 5880)%>%
   .[caat_shp_polybr,] ->plot_caat_polybr
+
+st_intersection(x = ibge_pop_ne, y = sc_data_caat) -> ibge_pop_caat_sirgas
 
 ###buffers----
 #### union----
@@ -82,4 +84,4 @@ st_buffer(x = plot_caat_polybr, dist = 10000)%>%
 
 # data export ####
 st_write(obj = sc_data_caat, dsn = here("data/sc_rural_caat.shp"))
-         
+st_write(obj = ibge_pop_caat_sirgas, dsn = here("data/ibge_pop_caat.shp"))
