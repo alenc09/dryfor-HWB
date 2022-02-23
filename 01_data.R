@@ -102,6 +102,10 @@ st_intersection(x = ibge_grid_data,
                 )-> pop_data_5km_forest
 
 ###Weighted means----
+perc_fun <- function(x,y){
+  (x/y)*100
+} 
+####forested plots----
 pop_data_5km_forest_sirgas%>%
   as.data.frame()%>%
   group_by(CD_GEOC, id_buff)%>%
@@ -118,29 +122,43 @@ pop_prop_sc_buff$pop_prop[pop_prop_sc_buff$pop_prop > 1] <- 1
 
 pop_prop_sc_buff%>%
   as.data.frame()%>%
-  dplyr::select(id_buff, CD_GEOC, lnd_s_c, tre_cvr, V5, V6, V7, V8, V9, V10, V11, V12, V19, V20, V21, V22, V23, pop_prop)%>%
+  dplyr::select(id_buff, CD_GEOC, lnd_s_c, tre_cvr,V1, V5, V6, V7, V8, V9, V10, V11, V12, V13, V19, V20, V21, V22, V23, pop_prop)%>%
   arrange(id_buff)%>%
   group_by(id_buff)%>%
-  summarise(v5_wm = weighted.mean(x = V5, w = pop_prop),   #across() not working with weighted means
-            v6_wm = weighted.mean(x = V6, w = pop_prop),
-            v7_wm = weighted.mean(x = V7, w = pop_prop),
-            v8_wm = weighted.mean(x = V8, w = pop_prop),
-            v9_wm = weighted.mean(x = V9, w = pop_prop),
-            v10_wm = weighted.mean(x = V10, w = pop_prop),
-            v11_wm = weighted.mean(x = V11, w = pop_prop),
-            v12_wm = weighted.mean(x = V12, w = pop_prop),
-            v19_wm = weighted.mean(x = V19, w = pop_prop),
-            v20_wm = weighted.mean(x = V20, w = pop_prop),
-            v21_wm = weighted.mean(x = V21, w = pop_prop),
-            v22_wm = weighted.mean(x = V22, w = pop_prop),
-            v23_wm = weighted.mean(x = V23, w = pop_prop),
-            
-            )%>%
-  glimpse -> buff_W.vars
+  mutate(across(.cols = V1:V23, .fns =  list("wm" = ~ weighted.mean(x = ., w = pop_prop))))%>%
+  mutate(across(.cols = c(V5_wm:V11_wm, V19_wm:V21_wm), .fns = list("perc" = ~ perc_fun(x =., y = V1_wm))))%>%
+  mutate(across(.cols = c(V12_wm, V22_wm, V23_wm), .fns = list("perc" = ~ perc_fun(x =., y = V13_wm))))%>%
+  glimpse -> buff_vars_5km_forest
   
+####Non-forested plots----
+pop_data_5km_Nforest_sirgas%>%
+  as.data.frame()%>%
+  group_by(CD_GEOC, id_buff)%>%
+  dplyr::summarise(pop_sc_buff = sum(POP))%>%
+  glimpse() -> aeee_porraa_consegui_2
+
+pop_data_5km_Nforest_sirgas%>%
+  distinct(CD_GEOC, id_buff, .keep_all = T)%>%
+  left_join(x = ., y = aeee_porraa_consegui_2, by= c("CD_GEOC", "id_buff"))%>%
+  mutate(pop_prop = pop_sc_buff/V2 , .keep = "all")%>%
+  glimpse -> pop_prop_sc_buff_5km_Nforest
+
+pop_prop_sc_buff_5km_Nforest$pop_prop[pop_prop_sc_buff_5km_Nforest$pop_prop > 1] <- 1
+
+pop_prop_sc_buff_5km_Nforest%>%
+  as.data.frame()%>%
+  dplyr::select(id_buff, CD_GEOC, lnd_s_c, tre_cvr,V1, V5, V6, V7, V8, V9, V10, V11, V12, V13, V19, V20, V21, V22, V23, pop_prop)%>%
+  arrange(id_buff)%>%
+  group_by(id_buff)%>%
+  mutate(across(.cols = V1:V23, .fns =  list("wm" = ~ weighted.mean(x = ., w = pop_prop))))%>%
+  mutate(across(.cols = c(V5_wm:V11_wm, V19_wm:V21_wm), .fns = list("perc" = ~ perc_fun(x =., y = V1_wm))))%>%
+  mutate(across(.cols = c(V12_wm, V22_wm, V23_wm), .fns = list("perc" = ~ perc_fun(x =., y = V13_wm))))%>%
+  glimpse -> buff_vars_5km_Nforest
+
+
 ## visualization ####
-#plot(sc_rural_caat$geometry) #very RAM consuming. Plot only if need
-#plot(sc_data_caat$geometry)  #very RAM consuming. Plot only if need
+
+hist(buff_W.vars$v23_wm)
 
 # data export ####
 st_write(obj = sc_data_caat, dsn = here("data/sc_rural_caat.shp"))
