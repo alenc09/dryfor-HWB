@@ -34,7 +34,7 @@ tb_data_5km%>%
   facet_wrap(~ lnd_s_c + vars, scales = "free")
 
 tb_data_5km%>%
-  ggplot(aes(x = lnd_s_c, y = V5_wm_perc))+
+  ggplot(aes(x = lnd_s_c, y = V9_wm_perc))+
   geom_violin()
 
 summary(glm(data = tb_data_5km, V10_wm_perc ~ lnd_s_c))
