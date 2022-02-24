@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="" xml:lang="">
   <head>
-    <title>Forest proximate people… in Caatinga</title>
+    <title>Forest proximate people in Caatinga</title>
     <meta charset="utf-8" />
-    <meta name="author" content="Lucas Alenar" />
+    <meta name="author" content="Lucas Alencar" />
     <script src="libs/header-attrs-2.11/header-attrs.js"></script>
     <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
     <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
@@ -12,10 +12,10 @@
     <textarea id="source">
 class: center, middle, inverse, title-slide
 
-# Forest proximate people… in Caatinga
-### Lucas Alenar
+# Forest proximate people in Caatinga
+### Lucas Alencar
 ### UFPE
-### 12/11/2021 (updated: 2022-02-10)
+### 12/11/2021 (updated: 2022-02-24)
 
 ---
 
@@ -43,148 +43,106 @@ class: inverse
   - 6,200 plots in Caatinga, but 1,606 forested
 
 --
-
-- Caatinga shape
-  - From Geobr
-  - 2019 delimitation
-
----
-class: inverse, center
-## 10km buffer with union functions
-![](presentation_files/figure-html/unnamed-chunk-2-1.png)&lt;!-- --&gt;
+- Censo demográfico 2010
+  - Setor censitário
+  - Only rural sector
 
 ---
-class: inverse, center
-## Zoom in the NE of Caatinga
-![](presentation_files/figure-html/unnamed-chunk-3-1.png)&lt;!-- --&gt;
-
+class: inverse
+#Data processing
+##Estimates of Forest proximate people
+.center[
+&lt;img src="presentation_files/figure-html/unnamed-chunk-2-1.png" width="50%" /&gt;
+]
 ---
-class: center
+# Population closed to forest by different datasets
 &lt;table&gt;
  &lt;thead&gt;
   &lt;tr&gt;
-   &lt;th style="text-align:left;"&gt; Population &lt;/th&gt;
-   &lt;th style="text-align:right;"&gt; pop1km &lt;/th&gt;
-   &lt;th style="text-align:right;"&gt; pop5km &lt;/th&gt;
-   &lt;th style="text-align:right;"&gt; pop10km &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; source &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; buffer_1km &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; buffer_5km &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; buffer_10km &lt;/th&gt;
   &lt;/tr&gt;
  &lt;/thead&gt;
 &lt;tbody&gt;
   &lt;tr&gt;
-   &lt;td style="text-align:left;"&gt; rural only &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 3912.339 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 119988 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 420970.1 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; IBGE - 2010 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 111857 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2754932 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 9222520 &lt;/td&gt;
   &lt;/tr&gt;
   &lt;tr&gt;
-   &lt;td style="text-align:left;"&gt; total &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 69284.075 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Landscan - 2010 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 89082 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3070768 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 9861796 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; Landscan - 2019 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 54209 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2723476 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 9580488 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; WorldPop - 2020 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 69284 &lt;/td&gt;
    &lt;td style="text-align:right;"&gt; 2936156 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 10643019.2 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 10643019 &lt;/td&gt;
   &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;
 
 ---
-class:inverse
-background-image: url(img/grid_bastin.jpg)
-background-size: contain
-background-position: 50% 50%
+class: inverse
+#Data processing
+###Estimative of socieconomic condition of forest proxiamte people
 
-# **Bastin et al Samples of forest cover in drylands**
+- Forest buffers with more than one sector
+ &lt;br/&gt;
 
----
-class:inverse
-background-image: url(img/grid_bastin_sanharo.jpg)
-background-size: contain
-background-position: 50% 50%
+- ... and same sectors within multiple buffers
+&lt;br/&gt;
 
-# **Closer look at Sanharó**
-
----
-class: inverse, center
-
-# frequency of forested plots by mapbiomas land cover
-
-
----
-# % of native vegetation (Mapbiomas) inside each buffer
+- Weighted sector variables by the % of people inside buffers 
 
 .pull-left[
-
-- Lack RAM for 30m resolution analysis
-
-
+&lt;img src="img/setores_buffer.png" width="80%" /&gt;
 ]
 
-.pull-rigth[
-
-- Aggregate forest cover to 240m resolution
-
-
+.pull-right[
+&lt;img src="img/setor_buffers.png" width="100%" /&gt;
 ]
 
 ---
-# Comparing bastin and mapbiomas dataset...
-- 1km buffer -&gt; 0,6% Caatinga nvc by mapbiomas
-- 5km buffer -&gt; 15%
-- 10km buffer -&gt; 46%
+#Data processing
+###Estimative of socieconomic condition of forest proxiamte people
+- Weighted means
 
-
----
-# Population closed to forest by different datasets
-
-
----
-# What can I do with this data?
+.pull-left[
+&lt;img src="img/weighted_mean.png" width="85%" /&gt;
+]
 
 --
-1. Evaluate uncertainty in FPP estimations
 
---
-2. Change of FPP over time
-
---
-3. Add socio-economic data to build a "profile" of FPP
-
---
-4. Forget about it and focus on the other chapters
+.pull-right[
+&lt;img src="img/vars_weighted.png" width="95%" /&gt;
+]
 
 ---
-#The number and profile of forest proxiamte people in Caatinga
+#Results
+###Compare people's conditions
+- Data for analysis is in percentage (of household or people)
 
---
-1. We already have an estimate: 2.9 million people within 5km
-
-2. The profile
-- 2.1 Forest-dependent people framework ([Newton et al, 2016](https://www.sciencedirect.com/science/article/pii/S0264837716300497?via%3Dihub))
-
-- 2.2 Multipoverty Index ([Aguilar &amp; Sumner, 2020
-](https://www.sciencedirect.com/science/article/abs/pii/S0305750X19303651?via%3Dihub))
+- simple GLMs comparing socioeconomic conditions in buffers with and without forests
 
 ---
-#The number and profile of forest proxiamte people in Caatinga
-- 2.3 Forest
- - Bastin et al, 2018 (sample of forests in drylands)
- - sensivity test with mapbiomas data
-
-- 2.4 Proximate ("dependent")
- - 5km buffers (1 and 10km as sensivity test)
- - Remoteness (how to calculate?)
-
-- 2.5 People
- - Setor censitário 2010
- - Variables from 2010 and forest sample from 2015
- - try sensus tracs from censo agro 2017
-
-- 2.6 Check if the buffers around forests represents well the people inside sensus tracs
- - and then if data from sensus tracs can represent socioeconomic characteristics of FPP
-
+#Results
+###Compare people's conditions
+&lt;img src="img/pre-result_table.png" width="80%" style="display: block; margin: auto;" /&gt;
 ---
-#Forest proximate vs away forest people
-
-Compare income between sensus tracts with and without forests
-
+#Next steps
+###Compare income between buffers with and without forests
 - Use matching to find pairs
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>

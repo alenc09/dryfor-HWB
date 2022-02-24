@@ -6,6 +6,7 @@ library(sf)
 library(here)
 library(dplyr)
 library(readxl)
+library(geobr)
 
 #data####
 sf_use_s2(FALSE) #função para desativar a checagem de vértices duplicados
@@ -32,6 +33,14 @@ st_read(dsn = here("data/ibge_pop_caat.shp")) -> ibge_grid_data
 read_sf(here("data/pop_data_5km_forest_sirgas.shp"))-> pop_data_5km_forest_sirgas
 read_sf(here("data/pop_data_5km_Nforest_sirgas.shp"))-> pop_data_5km_Nforest_sirgas
 
+raster(x = here("data/pop_caat_polybr_1000.tif")) -> pop_caat_polybr_1000
+
+read_biomes(simplified = F) %>%
+  filter(name_biome == "Caatinga") %>%
+  glimpse -> caat_shp
+
+raster(x = here("data/bra_ppp_2020_UNadj_constrained.tif")) -> br_pop
+
 ##transformation####
 sc_caat%>%
   dplyr::filter(TIPO== "RURAL") ->sc_rural_caat
@@ -57,6 +66,11 @@ df_plots %>% #filtering only plots in Caatinga
   .[caat_shp_polybr,] ->plot_caat_polybr
 
 st_intersection(x = ibge_pop_ne, y = sc_data_caat) -> ibge_pop_caat_sirgas
+
+raster::rasterToPoints(pop_caat_polybr_1000) %>% 
+  tibble::as_tibble() ->pop_caat_tibble
+
+st_transform(caat_shp, crs = 5880) ->caat_shp_polybr
 
 ###buffers----
 #### union----

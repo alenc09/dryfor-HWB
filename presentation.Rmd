@@ -1,7 +1,7 @@
 ---
-title: "Forest proximate people... in Caatinga"
+title: "Forest proximate people in Caatinga"
 subtitle: 
-author: "Lucas Alenar"
+author: "Lucas Alencar"
 institute: "UFPE"
 date: "12/11/2021 (updated: `r Sys.Date()`)"
 output:
@@ -46,25 +46,18 @@ class: inverse
   - 6,200 plots in Caatinga, but 1,606 forested
 
 --
-
-- Caatinga shape
-  - From Geobr
-  - 2019 delimitation
-
----
-class: inverse, center
-## 10km buffer with union functions
-```{r, echo=F, fig.height=8, fig.width=9}
-plot(caat_shp_polybr$geom)
-plot(buff_10km_union, add = T)
-```
+- Censo demográfico 2010
+  - Setor censitário
+  - Only rural sector
 
 ---
-class: inverse, center
-## Zoom in the NE of Caatinga
-```{r echo=F, fig.height=8, fig.width=9, message=FALSE, warning=FALSE}
+class: inverse
+#Data processing
+##Estimates of Forest proximate people
+.center[
+```{r echo=F, out.width="50%", message=FALSE, warning=FALSE}
 ggplot() +
-  geom_raster(data = pop_caat_tibble, aes(x=x, y=y, fill=bra_ppp_2020_UNadj_constrained))+
+  geom_raster(data = pop_caat_tibble, aes(x=x, y=y, fill=pop_caat_polybr_1000))+
   geom_sf(data = caat_shp_polybr, fill= NA, colour = "black", size = .3) +
   geom_sf(data = plot_caat_polybr, size =0.1) +
   geom_sf(data=st_as_sf(buff_1km_union), fill = NA, col = "red") +
@@ -77,123 +70,72 @@ ggplot() +
         axis.title = element_blank()
   )
 ```
-
----
-class: center
-```{r echo=FALSE}
-
-kableExtra::kable(df_results)
-```
-
----
-class:inverse
-background-image: url(img/grid_bastin.jpg)
-background-size: contain
-background-position: 50% 50%
-
-# **Bastin et al Samples of forest cover in drylands**
-
----
-class:inverse
-background-image: url(img/grid_bastin_sanharo.jpg)
-background-size: contain
-background-position: 50% 50%
-
-# **Closer look at Sanharó**
-
----
-class: inverse, center
-
-# frequency of forested plots by mapbiomas land cover
-```{r eval=FALSE, include=FALSE}
-freq_forest_landuse
-```
-
----
-# % of native vegetation (Mapbiomas) inside each buffer
-
-.pull-left[
-
-- Lack RAM for 30m resolution analysis
-```{r eval=FALSE, warning=FALSE, include=FALSE}
-raster(x="D:/lucas_alencar/downloads/caat_nvc.tif")-> caat_nvc
-plot(caat_nvc)
-```
-
 ]
-
-.pull-rigth[
-
-- Aggregate forest cover to 240m resolution
-```{r eval=FALSE, warning=FALSE, include=FALSE}
-raster(x="D:/lucas_alencar/downloads/caat_nvc_240.tif")-> caat_nvc_240m
-plot(caat_nvc_240m)
-```
-
-]
-
----
-# Comparing bastin and mapbiomas dataset...
-- 1km buffer -> 0,6% Caatinga nvc by mapbiomas
-- 5km buffer -> 15%
-- 10km buffer -> 46%
-
-
 ---
 # Population closed to forest by different datasets
-```{r eval=FALSE, include=FALSE}
+```{r echo=FALSE}
 kableExtra::kable(df_pop_all)
 
 ```
 
 ---
-# What can I do with this data?
+class: inverse
+#Data processing
+###Estimative of socieconomic condition of forest proxiamte people
 
---
-1. Evaluate uncertainty in FPP estimations
+- Forest buffers with more than one sector
+ <br/>
 
---
-2. Change of FPP over time
+- ... and same sectors within multiple buffers
+<br/>
 
---
-3. Add socio-economic data to build a "profile" of FPP
+- Weighted sector variables by the % of people inside buffers 
 
---
-4. Forget about it and focus on the other chapters
+.pull-left[
+```{r echo=FALSE, out.width= "80%"}
+knitr::include_graphics("img/setores_buffer.png") 
+```
+]
 
----
-#The number and profile of forest proxiamte people in Caatinga
-
---
-1. We already have an estimate: 2.9 million people within 5km
-
-2. The profile
-- 2.1 Forest-dependent people framework ([Newton et al, 2016](https://www.sciencedirect.com/science/article/pii/S0264837716300497?via%3Dihub))
-
-- 2.2 Multipoverty Index ([Aguilar & Sumner, 2020
-](https://www.sciencedirect.com/science/article/abs/pii/S0305750X19303651?via%3Dihub))
+.pull-right[
+```{r echo=FALSE , out.width= "100%"}
+knitr::include_graphics("img/setor_buffers.png") 
+```
+]
 
 ---
-#The number and profile of forest proxiamte people in Caatinga
-- 2.3 Forest
- - Bastin et al, 2018 (sample of forests in drylands)
- - sensivity test with mapbiomas data
+#Data processing
+###Estimative of socieconomic condition of forest proxiamte people
+- Weighted means
 
-- 2.4 Proximate ("dependent")
- - 5km buffers (1 and 10km as sensivity test)
- - Remoteness (how to calculate?)
+.pull-left[
+```{r echo=FALSE, out.width= "85%"}
+knitr::include_graphics("img/weighted_mean.png") 
+```
+]
 
-- 2.5 People
- - Setor censitário 2010
- - Variables from 2010 and forest sample from 2015
- - try sensus tracs from censo agro 2017
+--
 
-- 2.6 Check if the buffers around forests represents well the people inside sensus tracs
- - and then if data from sensus tracs can represent socioeconomic characteristics of FPP
+.pull-right[
+```{r echo=FALSE, out.width= "95%"}
+knitr::include_graphics("img/vars_weighted.png") 
+```
+]
 
 ---
-#Forest proximate vs away forest people
+#Results
+###Compare people's conditions
+- Data for analysis is in percentage (of household or people)
 
-Compare income between sensus tracts with and without forests
+- simple GLMs comparing socioeconomic conditions in buffers with and without forests
 
+---
+#Results
+###Compare people's conditions
+```{r echo=FALSE, out.width= "80%", fig.align='center'}
+knitr::include_graphics("img/pre-result_table.png") 
+```
+---
+#Next steps
+###Compare income between buffers with and without forests
 - Use matching to find pairs
