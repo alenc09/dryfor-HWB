@@ -15,135 +15,35 @@ class: center, middle, inverse, title-slide
 # Forest proximate people in Caatinga
 ### Lucas Alencar
 ### UFPE
-### 12/11/2021 (updated: 2022-02-24)
+### 12/11/2021 (updated: 2022-03-10)
 
 ---
 
 
 
-class: inverse
-#data
-
-- [World Pop](https://www.worldpop.org/): Constrained data
-  - People per pixel
-  - ~3arc seconds (aprox. 100m at equator)
-  - data from 2020
-- [LandScan](https://landscan.ornl.gov/)
-  - People per pixel
-  - 1km at equator
-  - data from 2010, 2015, 2019
-- [IBGE Grade Estatística](https://geoftp.ibge.gov.br/recortes_para_fins_estatisticos/grade_estatistica/censo_2010/grade_estatistica.pdf)
-  - People per "pixel"
-  - 1km x 1km
-  - data from 2010 census
---
-
-- [Forested Plots](https://www.science.org/doi/10.1126/science.aam6527)
-  - Each plot classified as forest (&gt;20% of tree cover) and non-forest
-  - 6,200 plots in Caatinga, but 1,606 forested
-
---
-- Censo demográfico 2010
-  - Setor censitário
-  - Only rural sector
-
 ---
-class: inverse
-#Data processing
-##Estimates of Forest proximate people
 .center[
-&lt;img src="presentation_files/figure-html/unnamed-chunk-2-1.png" width="50%" /&gt;
-]
----
-# Population closed to forest by different datasets
-&lt;table&gt;
- &lt;thead&gt;
-  &lt;tr&gt;
-   &lt;th style="text-align:left;"&gt; source &lt;/th&gt;
-   &lt;th style="text-align:right;"&gt; buffer_1km &lt;/th&gt;
-   &lt;th style="text-align:right;"&gt; buffer_5km &lt;/th&gt;
-   &lt;th style="text-align:right;"&gt; buffer_10km &lt;/th&gt;
-  &lt;/tr&gt;
- &lt;/thead&gt;
-&lt;tbody&gt;
-  &lt;tr&gt;
-   &lt;td style="text-align:left;"&gt; IBGE - 2010 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 111857 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 2754932 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 9222520 &lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;tr&gt;
-   &lt;td style="text-align:left;"&gt; Landscan - 2010 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 89082 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 3070768 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 9861796 &lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;tr&gt;
-   &lt;td style="text-align:left;"&gt; Landscan - 2019 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 54209 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 2723476 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 9580488 &lt;/td&gt;
-  &lt;/tr&gt;
-  &lt;tr&gt;
-   &lt;td style="text-align:left;"&gt; WorldPop - 2020 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 69284 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 2936156 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 10643019 &lt;/td&gt;
-  &lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
+#Forest dependent people in Caatinga]
 
----
-class: inverse
-#Data processing
-###Estimative of socieconomic condition of forest proxiamte people
+###Total population in Caatinga
 
-- Forest buffers with more than one sector
- &lt;br/&gt;
+####Data: population grid from IBGE census 2010
 
-- ... and same sectors within multiple buffers
-&lt;br/&gt;
-
-- Weighted sector variables by the % of people inside buffers 
-
-.pull-left[
-&lt;img src="img/setores_buffer.png" width="80%" /&gt;
+.pull-left[- Total population
+] 
+.pull-right[- Rural population
 ]
 
-.pull-right[
-&lt;img src="img/setor_buffers.png" width="100%" /&gt;
-]
+&lt;img src="img/caat_total_pop.png" style="display: block; margin: auto auto auto 0;" /&gt;
 
----
-#Data processing
-###Estimative of socieconomic condition of forest proxiamte people
-- Weighted means
 
-.pull-left[
-&lt;img src="img/weighted_mean.png" width="85%" /&gt;
-]
+&lt;img src="img/caat_rural_pop.png" style="display: block; margin: auto 0 auto auto;" /&gt;
 
---
-
-.pull-right[
-&lt;img src="img/vars_weighted.png" width="95%" /&gt;
-]
-
----
-#Results
-###Compare people's conditions
-- Data for analysis is in percentage (of household or people)
-
-- simple GLMs comparing socioeconomic conditions in buffers with and without forests
-
----
-#Results
-###Compare people's conditions
-&lt;img src="img/pre-result_table.png" width="80%" style="display: block; margin: auto;" /&gt;
 ---
 #Next steps
-###Compare income between buffers with and without forests
+###Compare socioeconomic conditons
 - Use matching to find pairs
+
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
