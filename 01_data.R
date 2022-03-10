@@ -138,7 +138,9 @@ pop_result_forest%>%
             )%>%
   glimpse -> pop_result_5km
 
-  
+pop_rural_buff+pop_rural_Nforest -> pop_inside_buff
+
+cbind(pop_total_caat, pop_rural_caat, pop_inside_buff, pop_rural_buff)
 
 ###buffers----
 #### union----
