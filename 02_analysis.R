@@ -4,6 +4,7 @@
 #Libraries----
 library(ggplot2)
 library(tidyr)
+library(dplyr)
 library(landscapemetrics)
 library(raster)
 library(here)
