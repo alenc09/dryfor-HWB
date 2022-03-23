@@ -9,6 +9,7 @@ library(landscapemetrics)
 library(raster)
 library(here)
 library(sf)
+library(stringr)
 
 #data----
 raster(x = here("data/mapbiomas-brazil-collection-50-2010_5880.tif")) ->mapbiomas_caat
@@ -118,3 +119,71 @@ result_5km_forest%>%
          buff_class = if_else(id_buff <= 1605, true = "forest", false = "non-forest")
          ) %>% 
   glimpse -> table_analysis2
+
+buff_lsm%>%
+  select(plot_id, metric, class, value) %>% 
+  filter(plot_id != 1606) %>% 
+  pivot_wider(id_cols = plot_id,
+              names_sep = "_",
+              names_from = c(metric, class),
+              values_from = value
+              ) %>% 
+  left_join(y=table_analysis2, by = c("plot_id" = "id_buff")) %>%
+  glimpse -> table_analysis3
+
+table_analysis3[,2:48][is.na(table_analysis3[,2:48])] <- 0
+
+#buff_lsm %>%
+#  dplyr::group_by(plot_id, metric, class) %>%
+#  dplyr::summarise(n = dplyr::n(), .groups = "drop") %>%
+#  dplyr::filter(n > 1L)
+
+result_5km_forest%>%
+  bind_rows(result_5km_Nforest)%>%
+  ungroup() %>%
+  select(id_buff, CD_GEOC) %>% 
+  mutate(code_muni = str_sub(CD_GEOC, 1, 7)) %>% 
+  mutate(across(.fns = as.factor)) %>% 
+  select(-CD_GEOC) %>% 
+  distinct(id_buff, .keep_all = T) %>% 
+  right_join(y=table_analysis3, by = c("id_buff" = "plot_id")) %>% 
+  glimpse -> table_analysis4
+
+table_analysis4[,3:49][is.na(table_analysis4[,3:49])] <- 0
+
+## linear models ----
+### landscape diversity only ----
+table_analysis3 %>%
+  ggplot(aes(x=value, y= prop_dom_expov))+
+  geom_point() +
+  geom_smooth()
+
+glm(data = table_analysis3,
+    prop_dom_expov ~ shdi_NA,
+    family = quasibinomial) %>% 
+  #plot() %>% 
+  summary()
+
+### controlling for other land covers ----
+glm(data = table_analysis3,
+    prop_dom_expov ~ shdi_NA + pland_4 + pland_15,
+    family = quasibinomial) %>% 
+  #plot() %>% 
+  summary()
+
+
+## quadratic models----
+table_analysis3 %>%
+  ggplot(aes(x=shdi_NA, y= prop_dom_expov))+
+  geom_point() +
+  geom_smooth(formula = y ~ x + I(x^2),
+              method = "lm")
+
+glm(data = table_analysis3,
+    prop_dom_expov ~ shdi_NA + I(shdi_NA^2),
+    family = quasibinomial) %>% 
+  #plot() %>% 
+  summary()
+
+## mixed effect----
+
