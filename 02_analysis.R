@@ -10,6 +10,7 @@ library(raster)
 library(here)
 library(sf)
 library(stringr)
+library(lme4)
 
 #data----
 raster(x = here("data/mapbiomas-brazil-collection-50-2010_5880.tif")) ->mapbiomas_caat
@@ -154,7 +155,7 @@ table_analysis4[,3:49][is.na(table_analysis4[,3:49])] <- 0
 ## linear models ----
 ### landscape diversity only ----
 table_analysis3 %>%
-  ggplot(aes(x=value, y= prop_dom_expov))+
+  ggplot(aes(x=shdi_NA, y= prop_dom_expov))+
   geom_point() +
   geom_smooth()
 
@@ -171,6 +172,13 @@ glm(data = table_analysis3,
   #plot() %>% 
   summary()
 
+ggplot(data = table_analysis3, aes(x = pland_4, y = prop_dom_expov))+
+  geom_point()+
+  geom_smooth(method = "loess")
+
+ggplot(data = table_analysis3, aes(x = pland_15, y = prop_dom_expov))+
+  geom_point()+
+  geom_smooth(method = "loess")
 
 ## quadratic models----
 table_analysis3 %>%
@@ -186,4 +194,12 @@ glm(data = table_analysis3,
   summary()
 
 ## mixed effect----
+glmer(data = table_analysis4,
+      prop_dom_expov ~ shdi_NA + (1|code_muni),
+      family = binomial) %>% 
+  summary()
 
+glmer(data = table_analysis4,
+      prop_dom_expov ~ shdi_NA + pland_4 + pland_15 + (1|code_muni),
+      family = binomial) %>% 
+  summary()
