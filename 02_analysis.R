@@ -153,6 +153,7 @@ result_5km_forest%>%
 
 table_analysis4[,3:49][is.na(table_analysis4[,3:49])] <- 0
 
+#Exploratory----
 ## linear models ----
 ### landscape diversity only ----
 table_analysis3 %>%
@@ -242,3 +243,53 @@ glmer(data = table_analysis4,
       prop_dom_expov ~ shdi_NA + pland_4 + pland_15 + (1|code_muni),
       family = binomial) %>% 
   summary()
+
+## PCA----
+table_analysis4 %>% 
+  dplyr::select(id_buff, pland_3, pland_4, pland_12, pland_15, pland_21, pland_25,
+         pland_33, pland_29, pland_24, pland_48, pland_41, pland_23, pland_20,
+         pland_31, pland_5, pland_32, pland_30, pland_46, pland_9, pland_39,
+         pland_11, pland_13, shdi_NA) %>% 
+  dplyr::rename(pland_forest = pland_3,
+         pland_savanna = pland_4,
+         pland_mangrove = pland_5,
+         pland_wetland = pland_11,
+         pland_grass = pland_12,
+         pland_salt = pland_32,
+         pland_rocky = pland_29,
+         pland_otherVeg = pland_13,
+         pland_pasture = pland_15,
+         pland_soy = pland_39,
+         pland_sugar = pland_20,
+         pland_otherTcrop = pland_41,
+         pland_coffe = pland_46,
+         pland_otherPcrop = pland_48,
+         pland_Fplantation = pland_9,
+         pland_mosaicAP = pland_21,
+         pland_sand = pland_23,
+         pland_urban = pland_24,
+         pland_mine = pland_30,
+         pland_otherNveg = pland_25,
+         pland_water = pland_33,
+         pland_aquacult = pland_31
+         ) %>% 
+#  dplyr::mutate(pland_nvc = pland_forest + pland_savanna + pland_grass + pland_rocky +
+#           pland_mangrove + pland_wetland + pland_otherVeg + pland_salt,
+#         pland_agri = pland_pasture + pland_mosaicAP + pland_otherPcrop + 
+#           pland_otherTcrop + pland_sugar + pland_aquacult + pland_coffe + 
+#           pland_Fplantation + pland_soy, .keep="unused"
+#         ) %>% 
+  glimpse ->table_analysis5
+
+prcomp(table_analysis5[,-1], scale = T) -> pca
+summary(pca)
+plot(x = pca$x[,1], y = pca$x[,2])
+pca$sdev^2 -> pca.var
+pca.var/sum(pca.var)*100 -> pca.var.perc
+barplot(pca.var.perc)
+
+ggbiplot::ggbiplot(pca,
+                   #choices = 3:4,
+                   #obs.scale = 1,
+                   #var.scale = 1,
+                   alpha = 0.05)
