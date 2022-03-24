@@ -11,6 +11,7 @@ library(here)
 library(sf)
 library(stringr)
 library(lme4)
+library(GGally)
 
 #data----
 raster(x = here("data/mapbiomas-brazil-collection-50-2010_5880.tif")) ->mapbiomas_caat
@@ -157,8 +158,12 @@ table_analysis4[,3:49][is.na(table_analysis4[,3:49])] <- 0
 table_analysis3 %>%
   ggplot(aes(x=shdi_NA, y= prop_dom_expov))+
   geom_point() +
-  geom_smooth()
+  geom_smooth(method = 'lm',
+              y ~ x)
 
+ggplot(data = table_analysis3, aes(x = shdi_NA))+
+  geom_density()
+  
 glm(data = table_analysis3,
     prop_dom_expov ~ shdi_NA,
     family = quasibinomial) %>% 
@@ -172,11 +177,33 @@ glm(data = table_analysis3,
   #plot() %>% 
   summary()
 
-ggplot(data = table_analysis3, aes(x = pland_4, y = prop_dom_expov))+
+ggplot(data = table_analysis3, aes(x = pland_4, y = shdi_NA, color = prop_dom_expov > 0.3))+
   geom_point()+
   geom_smooth(method = "loess")
 
 ggplot(data = table_analysis3, aes(x = pland_15, y = prop_dom_expov))+
+  geom_point()+
+  geom_smooth(method = "loess")
+
+table_analysis3 %>% 
+dplyr::select(pland_3, pland_4, pland_15, shdi_NA, dom_expov, prop_dom_expov) %>% 
+ggpairs()
+
+ggplot(table_analysis3, aes(x = sqrt(pland_3), y = dom_expov))+
+  geom_point()+
+  geom_smooth(method = "gam")
+
+###log-transform----
+table_analysis3 %>%
+  ggplot(aes(x=log(shdi_NA + 0.0001), y= prop_dom_expov+0.001))+
+  geom_point() +
+  geom_smooth(method="loess")
+
+ggplot(data = table_analysis3, aes(x = log(pland_4), y = prop_dom_expov))+
+  geom_point()+
+  geom_smooth(method = "loess")
+
+ggplot(data = table_analysis3, aes(x = log(pland_15+0.0001), y = prop_dom_expov))+
   geom_point()+
   geom_smooth(method = "loess")
 
@@ -189,6 +216,18 @@ table_analysis3 %>%
 
 glm(data = table_analysis3,
     prop_dom_expov ~ shdi_NA + I(shdi_NA^2),
+    family = quasibinomial) %>% 
+  #plot() %>% 
+  summary()
+
+glm(data = table_analysis3,
+    prop_dom_expov ~ pland_4 + I(pland_4^2),
+    family = quasibinomial) %>% 
+  #plot() %>% 
+  summary()
+
+glm(data = table_analysis3,
+    prop_dom_expov ~ log(pland_15+0.0001) + I(pland_15^2),
     family = quasibinomial) %>% 
   #plot() %>% 
   summary()
