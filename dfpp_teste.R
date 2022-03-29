@@ -20,33 +20,16 @@ read.csv(file = here("data/aam6527_Bastin_Database-S1.csv"),
 
 raster(x = here("data/bra_ppp_2020_UNadj_constrained.tif")) -> br_pop
 raster(x = here("data/pop_caat_polybr_1000.tif")) -> pop_caat_polybr_1000
+raster(x = here("data/caat_rural_ppp_2000_1km_Aggregated_5880.tif")) -> WP_caat_rural_pop_2000_5880
+raster(x = here("data/caat_rural_ppp_2007_1km_Aggregated_5880.tif")) -> WP_caat_rural_pop_2007_5880
+raster(x = here("data/caat_pop_rural_landscan_2000.tif")) -> LS_caat_pop_rural_2000_5880
+raster(x = here("data/caat_pop_rural_landscan_2007.tif")) -> LS_caat_pop_rural_2007_5880
 
 #data manipulation----
 ## Caatinga shape----
 st_transform(caat_shp, crs = 4326) -> caat_shp_wgs84 #coordinate system change to wgs84
 as_Spatial(caat_shp_wgs84) -> caat_shp_wgs84_sp #object class change to be used in crop and mask functions
 st_transform(caat_shp, crs = 5880) ->caat_shp_polybr
-
-##population data----
-raster::crop(x = br_pop, y = caat_shp_wgs84_sp) -> br_pop_crop
-raster::mask(x = br_pop_crop, mask = caat_shp_wgs84_sp) -> pop_caat_wgs84 #filtering only population in Caatinga
-aggregate(x = pop_caat_wgs84, fact = 10, fun = sum) ->pop_caat_wgs84_1000
-"+proj=poly +lat_0=0 +lon_0=-54 +x_0=5000000 +y_0=10000000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs" -> proj_polyBR
-raster::projectRaster(pop_caat_wgs84_1000, crs = proj_polyBR, method = "bilinear")-> pop_caat_polybr_1000
-pop_caat_polybr_1000[is.na(pop_caat_polybr_1000)] <- 0 #change "no data" to zero population
-pop_caat_polybr_1000 -> pop_caat_rural_polybr
-pop_caat_rural_polybr[pop_caat_rural_polybr > 130] <- 0 #excluding urban areas
-pop_caat_wgs84[is.na(pop_caat_wgs84)] <- 0
-
-###data to points----
-raster::rasterToPoints(pop_caat_polybr_1000) %>% 
-  tibble::as_tibble() ->pop_caat_tibble
-
-raster::rasterToPoints(pop_caat_rural_polybr) %>% 
-  tibble::as_tibble() ->pop_caat_rural_tibble
-
-raster::rasterToPoints(br_pop) %>% 
-  tibble::as_tibble() ->br_pop_tibble
 
 ##plots----
 df_plots %>% #filtering only plots in Caatinga
@@ -93,6 +76,23 @@ raster::extract(x = pop_caat_rural_polybr,
                 fun = sum,
                 na.rm = FALSE) -> people_rural_10km
 
+raster::extract(x = WP_caat_rural_pop_2000_5880,
+                y= all_buff,
+                fun = sum,
+                na.rm = T) -> wP_pop_rural_2000_buff
+raster::extract(x = WP_caat_rural_pop_2007_5880,
+                y= all_buff,
+                fun = sum,
+                na.rm = T) -> wP_pop_rural_2007_buff
+
+raster::extract(x = LS_caat_pop_rural_2000_5880,
+                y= all_buff,
+                fun = sum,
+                na.rm = T) -> LS_pop_rural_2000_buff
+raster::extract(x = LS_caat_pop_rural_2007_5880,
+                y= all_buff,
+                fun = sum,
+                na.rm = T) -> LS_pop_rural_2007_buff
 
 ##all caatinga population----
 raster::extract(x = pop_caat_polybr_1000,
