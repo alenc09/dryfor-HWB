@@ -12,13 +12,15 @@ library(sf)
 library(stringr)
 library(lme4)
 library(GGally)
+library(ggpubr)
+library(readxl)
 
 #data----
 raster(x = here("data/mapbiomas-brazil-collection-50-2010_5880.tif")) ->mapbiomas_caat
 st_read(dsn = here("data/buffer_5km.shp")) -> all_buff
 st_cast(all_buff, "MULTIPOLYGON") -> all_buff2
 st_read(dsn = here("data/caat_points.shp"))-> caat_points
-
+read.csv("/home/alenc/Documents/Doutorado/tese/cap0/dryfor-HWB/table_analysis4.csv")->table_analysis4
 #buffer land cover----
 landscapemetrics::sample_lsm(landscape = mapbiomas_caat,
                              y = all_buff,
@@ -246,7 +248,9 @@ glmer(data = table_analysis4,
 
 ## PCA----
 table_analysis4 %>% 
-  dplyr::select(id_buff, pland_3, pland_4, pland_12, pland_15, pland_21, pland_25,
+  dplyr::select(id_buff, pop, dom, dom_expov, dom_Senerg, dom_Scist, pop_analf, prop_dom_expov,
+                prop_dom_Senerg, prop_dom_Scist, prop_pop_analf, pland_3, pland_4,
+                pland_12, pland_15, pland_21, pland_25,
          pland_33, pland_29, pland_24, pland_48, pland_41, pland_23, pland_20,
          pland_31, pland_5, pland_32, pland_30, pland_46, pland_9, pland_39,
          pland_11, pland_13, shdi_NA) %>% 
@@ -273,12 +277,12 @@ table_analysis4 %>%
          pland_water = pland_33,
          pland_aquacult = pland_31
          ) %>% 
-#  dplyr::mutate(pland_nvc = pland_forest + pland_savanna + pland_grass + pland_rocky +
-#           pland_mangrove + pland_wetland + pland_otherVeg + pland_salt,
-#         pland_agri = pland_pasture + pland_mosaicAP + pland_otherPcrop + 
-#           pland_otherTcrop + pland_sugar + pland_aquacult + pland_coffe + 
-#           pland_Fplantation + pland_soy, .keep="unused"
-#         ) %>% 
+  dplyr::mutate(pland_nvc = pland_forest + pland_savanna + pland_grass + pland_rocky +
+           pland_mangrove + pland_wetland + pland_otherVeg + pland_salt,
+         pland_agri = pland_pasture + pland_mosaicAP + pland_otherPcrop + 
+           pland_otherTcrop + pland_sugar + pland_aquacult + pland_coffe + 
+           pland_Fplantation + pland_soy, .keep="unused"
+         ) %>% 
   glimpse ->table_analysis5
 
 prcomp(table_analysis5[,-1], scale = T) -> pca
@@ -293,3 +297,153 @@ ggbiplot::ggbiplot(pca,
                    #obs.scale = 1,
                    #var.scale = 1,
                    alpha = 0.05)
+
+##people and forest----
+table_analysis5 %>% 
+  filter(pland_nvc >=10) %>% 
+  dplyr::mutate(pop_10 = sum(pop, na.rm=T), .keep = "none") %>% 
+  glimpse -> pop_10
+
+table_analysis5 %>% 
+  filter(pland_nvc >=100) %>% 
+  dplyr::mutate(dom_100 = sum(dom, na.rm=T), .keep = "none") %>% 
+  glimpse -> dom_100
+
+c(10, 20, 30, 40, 50, 60, 70, 80, 90, 100)-> threshold
+
+c(pop_10[1,], pop_20[1,], pop_30[1,], pop_40[1,], pop_50[1,], pop_60[1,],
+      pop_70[1,], pop_80[1,], pop_90[1,], pop_100[1,]) -> pop
+c(dom_10[1,], dom_20[1,], dom_30[1,], dom_40[1,], dom_50[1,], dom_60[1,],
+      dom_70[1,], dom_80[1,], dom_90[1,], dom_100[1,]) -> dom
+
+cbind(pop, dom, threshold)-> pop_thresh
+as_tibble(pop_thresh) -> pop_thresh
+
+#table_analysis6
+data.frame(table_analysis6) %>% 
+  #select(-geometry) %>% 
+  filter(pland_nvc >=100) %>% 
+  dplyr::mutate(pop_LS_100 = sum(pop_LS_2010, na.rm=T), .keep = "none") %>% 
+  glimpse -> pop_LS_100
+
+c(pop_LS_10[1,], pop_LS_20[1,], pop_LS_30[1,], pop_LS_40[1,], pop_LS_50[1,], pop_LS_60[1,],
+      pop_LS_70[1,], pop_LS_80[1,], pop_LS_90[1,], pop_LS_100[1,]) -> pop_LS
+cbind(pop_LS, threshold)-> pop_thresh_LS
+as_tibble(pop_thresh_LS) -> pop_thresh_LS
+
+data.frame(table_analysis6) %>% 
+  #select(-geometry) %>% 
+  filter(pland_nvc >=100) %>% 
+  dplyr::mutate(pop_WP_100 = sum(pop_WP_2010, na.rm=T), .keep = "none") %>% 
+  glimpse -> pop_WP_100
+
+c(pop_WP_10[1,], pop_WP_20[1,], pop_WP_30[1,], pop_WP_40[1,], pop_WP_50[1,], pop_WP_60[1,],
+      pop_WP_70[1,], pop_WP_80[1,], pop_WP_90[1,], pop_WP_100[1,]) -> pop_WP
+cbind(pop_WP, threshold)-> pop_thresh_WP
+#colnames(pop_thresh_WP) <- c("pop_WP", "nvc")
+as_tibble(pop_thresh_WP) -> pop_thresh_WP
+
+pop_thresh %>% 
+  #as_tibble() %>% 
+  left_join(pop_thresh_LS, by= "threshold") %>%
+  left_join(pop_thresh_WP, by = "threshold") %>% 
+  glimpse -> pop_thresh_all
+
+ggplot(data = pop_thresh_all)+
+  geom_point(aes(x = threshold, y = pop_ibge_2010))+
+  geom_point(aes(x = threshold, y = pop_LS_2010), color="red")+
+  geom_point(aes(x = threshold, y = pop_WP_2010), color="green")+
+  ylab("forest proximate people") +
+  xlab("forest threshold") +
+  labs(title = "2010") +
+  scale_y_continuous(breaks = c(0, 1250000, 2500000, 3750000,5000000, 6250000, 7500000, 8750000, 10000000))+
+  theme_classic()-> fpp_thresholds_2010
+
+data.frame(table_analysis6) %>% 
+  #select(-geometry) %>% 
+  filter(pland_nvc >=100) %>% 
+  dplyr::mutate(pop_LS_100 = sum(pop_LS_2000, na.rm=T), .keep = "none") %>% 
+  glimpse -> pop_LS_2000_100
+
+c(pop_LS_2000_10[1,], pop_LS_2000_20[1,], pop_LS_2000_30[1,], pop_LS_2000_40[1,], pop_LS_2000_50[1,], pop_LS_2000_60[1,],
+  pop_LS_2000_70[1,], pop_LS_2000_80[1,], pop_LS_2000_90[1,], pop_LS_2000_100[1,]) -> pop_LS_2000
+cbind(pop_LS_2000, threshold)-> pop_LS_2000_thresh
+#colnames(pop_thresh_LS) <- c("pop_LS", "nvc")
+as_tibble(pop_LS_2000_thresh) -> pop_LS_2000_thresh
+
+data.frame(table_analysis6) %>% 
+  #select(-geometry) %>% 
+  filter(pland_nvc >=100) %>% 
+  dplyr::mutate(pop_WP_100 = sum(pop_WP_2000, na.rm=T), .keep = "none") %>% 
+  glimpse -> pop_WP_2000_100
+
+c(pop_WP_2000_10[1,], pop_WP_2000_20[1,], pop_WP_2000_30[1,], pop_WP_2000_40[1,], pop_WP_2000_50[1,], pop_WP_2000_60[1,],
+  pop_WP_2000_70[1,], pop_WP_2000_80[1,], pop_WP_2000_90[1,], pop_WP_2000_100[1,]) -> pop_WP_2000
+cbind(pop_WP_2000, threshold)-> pop_WP_2000_thresh
+#colnames(pop_thresh_LS) <- c("pop_LS", "nvc")
+as_tibble(pop_WP_2000_thresh) -> pop_WP_2000_thresh
+
+pop_LS_2000_thresh %>% 
+  left_join(pop_WP_2000_thresh, by = "threshold") %>% 
+  right_join(y=pop_thresh_all, by = "threshold") %>% 
+  rename(pop_ibge_2010 = pop,
+         dom_ibge_2010 = dom,
+         pop_LS_2010 = pop_LS,
+         pop_WP_2010 = pop_WP) %>% 
+  select(threshold, pop_ibge_2010, dom_ibge_2010, pop_LS_2000, pop_WP_2000, pop_LS_2010, pop_WP_2010) %>% 
+  glimpse -> pop_thresh_all
+
+ggplot(data = pop_thresh_all)+
+  geom_point(aes(x = threshold, y = pop_LS_2000), color="red")+
+  geom_point(aes(x = threshold, y = pop_WP_2000), color="green")+
+  ylab("forest proximate people") +
+  xlab("forest threshold") +
+  labs(title = "2000") +
+  scale_y_continuous(breaks = c(0, 1250000, 2500000, 3750000,5000000, 6250000, 7500000, 8750000, 10000000))+
+  theme_classic()-> fpp_thresholds_2000
+ggplot(data = pop_thresh_all)+
+  geom_point(aes(x = threshold, y = pop_LS_2010), color="red")+
+  geom_point(aes(x = threshold, y = pop_WP_2010), color="green")+
+  ylab("forest proximate people") +
+  xlab("forest threshold") +
+  labs(title = "2010") +
+  scale_y_continuous(breaks = c(0, 1250000, 2500000, 3750000,5000000, 6250000, 7500000, 8750000, 10000000))+
+  theme_classic()-> fpp_thresholds_2010
+ggpubr::ggarrange(fpp_thresholds_2000, fpp_thresholds_2010)
+
+###people and forest change----
+table_analysis4 %>% 
+  select(id_buff, code_muni) %>% 
+  left_join(y = table_analysis5, by= "id_buff") %>% 
+  glimpse -> table_analysis5
+
+buff_5km_pop_rural_WP_2010$id_buff<- as.integer(buff_5km_pop_rural_WP_2010$id_buff)
+buff_5km_pop_rural_WP_2000$id_buff<- as.integer(buff_5km_pop_rural_WP_2000$id_buff)
+
+read_xlsx(path = "/home/alenc/Documents/Doutorado/tese/cap1/forest-develop/dbcap1_clean.xlsx") %>% 
+  select(code_muni, nvcPerc_00, nvcPerc_10) %>% 
+  right_join(y = table_analysis5) %>% 
+  left_join(y= select(buff_5km_pop_rural_WP_2000, id_buff, pop_sum), by = "id_buff") %>% 
+  rename(pop_sum_2000 = pop_sum) %>% 
+  left_join(y= select(buff_5km_pop_rural_WP_2010, id_buff, pop_sum), by = "id_buff") %>% 
+  rename(pop_sum_2010 = pop_sum) %>%
+  mutate(vari_pop = pop_sum_2010 - pop_sum_2000,
+         vari_pop_perc = (pop_sum_2010/pop_sum_2000)*100-100,
+         vari_nvc = nvcPerc_10 - nvcPerc_00) %>%
+  glimpse -> table_analysis7
+
+hist(table_analysis7$vari_pop)
+
+table_analysis7 %>% 
+#filter(nvcPerc_00 >=50) %>% 
+  group_by(code_muni,vari_nvc) %>% 
+  summarize_at(vars(vari_pop_perc), list(mean)) %>% 
+  mutate(cat_quad=ifelse(vari_nvc<0 & vari_pop_perc<0,"PP",
+                         ifelse(vari_nvc<0 & vari_pop_perc>0,"PG",
+                               ifelse(vari_nvc>0 & vari_pop_perc>0,"GG",
+                                "GP")))) %>% 
+ggplot()+
+  geom_point(aes(x=vari_nvc, y=vari_pop_perc, color = cat_quad, alpha=0.1))+
+  ylim(-100,100)
+  
+´

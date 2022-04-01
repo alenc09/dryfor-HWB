@@ -9,6 +9,7 @@ library(readxl)
 library(geobr)
 library(foreign)
 library(ggplot2)
+library(geobr)
 
 #data----
 sf_use_s2(FALSE) #função para desativar a checagem de vértices duplicados
@@ -47,6 +48,15 @@ st_read(dsn = here("data/pop_buff_5km.shp")) -> pop_buff_5km
 st_read(dsn = here("data/ibge_pop_caat_rural_clean.shp")) -> ibge_pop_rural_caat
 st_read(dsn = here("data/pop_data_5km_forest_sirgas_clean.shp")) -> pop_data_5km_forest_sirgas_clean
 st_read(dsn = here("data/pop_data_5km_Nforest_sirgas.shp")) -> pop_data_5km_Nforest_sirgas_clean
+
+st_read(dsn = here("data/buff_5km_pop_rural_LS_2000.shp")) -> buff_5km_pop_rural_LS_2000
+st_read(dsn = here("data/buff_5km_pop_rural_LS_2007.shp")) -> buff_5km_pop_rural_LS_2007
+st_read(dsn = here("data/buff_5km_pop_rural_LS_2010.shp")) -> buff_5km_pop_rural_LS_2010
+st_read(dsn = here("data/buff_5km_pop_rural_WP_2000.shp")) -> buff_5km_pop_rural_WP_2000
+st_read(dsn = here("data/buff_5km_pop_rural_WP_2007.shp")) -> buff_5km_pop_rural_WP_2007
+st_read(dsn = here("data/buff_5km_pop_rural_WP_2010.shp")) -> buff_5km_pop_rural_WP_2010
+
+#read_statistical_grid(code_grid = "PE")-> grid_PE
 
 ##transformation----
 sc_caat%>%
@@ -93,6 +103,24 @@ pop_data_5km_Nforest_sirgas_clean%>%
 
 bind_rows(data_pop_vars_forest, data_pop_vars_Nforest)%>%
   glimpse -> data_pop_vars_full
+
+buff_5km_pop_rural_LS_2000 %>%
+  select(id_buff, pop_sum) %>% 
+  rename(pop_LS_2000 = pop_sum) %>% 
+  right_join(y= select(tibble(buff_5km_pop_rural_LS_2007), id_buff, pop_sum), by = "id_buff") %>% 
+  rename(pop_LS_2007 = pop_sum) %>%
+  right_join(y= select(tibble(buff_5km_pop_rural_LS_2010), id_buff, pop_sum), by = "id_buff") %>% 
+  rename(pop_LS_2010 = pop_sum) %>%
+  right_join(y= select(tibble(buff_5km_pop_rural_WP_2000), id_buff, pop_sum), by = "id_buff") %>% 
+  rename(pop_WP_2000 = pop_sum) %>%
+  right_join(y= select(tibble(buff_5km_pop_rural_WP_2007), id_buff, pop_sum), by = "id_buff") %>% 
+  rename(pop_WP_2007 = pop_sum) %>%
+  right_join(y= select(tibble(buff_5km_pop_rural_WP_2010), id_buff, pop_sum), by = "id_buff") %>% 
+  rename(pop_WP_2010 = pop_sum) %>%
+  mutate(id_buff = as.integer(id_buff)) %>%
+  right_join(y= table_analysis5, by = "id_buff") %>%
+  rename(pop_IBGE_2010 = pop) %>% 
+  glimpse -> table_analysis6
 
 ###buffers----
 #### union----
