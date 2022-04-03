@@ -14,13 +14,20 @@ library(lme4)
 library(GGally)
 library(ggpubr)
 library(readxl)
+library(ggtern)
 
 #data----
 raster(x = here("data/mapbiomas-brazil-collection-50-2010_5880.tif")) ->mapbiomas_caat
+raster(x = here("data/mapbiomas-brazil-collection-60-caatinga-2000_5880.tif")) ->mapbiomas_caat_2000
 st_read(dsn = here("data/buffer_5km.shp")) -> all_buff
 st_cast(all_buff, "MULTIPOLYGON") -> all_buff2
 st_read(dsn = here("data/caat_points.shp"))-> caat_points
 read.csv("/home/alenc/Documents/Doutorado/tese/cap0/dryfor-HWB/table_analysis4.csv")->table_analysis4
+read_xlsx("/home/alenc/Documents/Doutorado/tese/cap0/dryfor-HWB/data/tabela2006.xlsx") -> table_agrifamiliar
+read_xlsx("/home/alenc/Documents/Doutorado/tese/cap0/dryfor-HWB/data/tabela2006.xlsx", sheet = 2) -> table_agrifamiliar_area
+read_xlsx("/home/alenc/Documents/Doutorado/tese/cap0/dryfor-HWB/data/Tabela2017.xlsx") -> table_agrifamiliar_2017
+read_xlsx("/home/alenc/Documents/Doutorado/tese/cap0/dryfor-HWB/data/Tabela2017.xlsx", sheet = 2) -> table_agrifamiliar_area_2017
+
 #buffer land cover----
 landscapemetrics::sample_lsm(landscape = mapbiomas_caat,
                              y = all_buff,
@@ -34,6 +41,19 @@ landscapemetrics::sample_lsm(landscape = mapbiomas_caat,
                              level = c("class", "class", "landscape"),
                              metric = c("ca","pland", "shdi")
                              )-> buff_lsm
+
+landscapemetrics::sample_lsm(landscape = mapbiomas_caat_2000,
+                             y = all_buff,
+                             plot_id = all_buff$id_buff,
+                             #shape = "circle",
+                             #size = 5000,
+                             #all_classes = T,
+                             return_raster = F,
+                             #progress = T,
+                             #what = "lsm_c_ca"
+                             level = c("class", "class"),
+                             metric = c("ca","pland")
+                             )-> buff_lsm_2000
 
 ##data on people and households inside buffers----
 data_pop_vars_forest%>%
@@ -441,9 +461,135 @@ table_analysis7 %>%
   mutate(cat_quad=ifelse(vari_nvc<0 & vari_pop_perc<0,"PP",
                          ifelse(vari_nvc<0 & vari_pop_perc>0,"PG",
                                ifelse(vari_nvc>0 & vari_pop_perc>0,"GG",
-                                "GP")))) %>% 
+                                "GP")))) -> table_variation
 ggplot()+
   geom_point(aes(x=vari_nvc, y=vari_pop_perc, color = cat_quad, alpha=0.1))+
   ylim(-100,100)
   
-´
+table_analysis7
+
+table_analysis7 %>% 
+  left_join(y = table_variation, by="code_muni") %>% 
+  group_by(code_muni, cat_quad) %>% 
+  na.omit(.$prop_dom_expov) %>% 
+  mutate(sd_cat = ifelse(test = vari_nvc.x > 2.964099, yes = "true", no = ifelse(vari_nvc.x < -5.291971,
+                                                                               yes = "true",
+                                                                               no = "foda_se"))) %>% 
+  dplyr::summarise(prop_dom_expov_mean = mean(prop_dom_expov),
+                   #sd_nvc = sd_nvc,
+                   sd_cat= sd_cat) %>% 
+  glimpse %>% 
+  filter(sd_cat == "true") -> table_summary_pov
+  #lm(prop_dom_expov_mean~cat_quad, data=.) %>% 
+  #summary()
+  
+  ggplot()+
+  geom_boxplot(aes(x=cat_quad, y=prop_dom_expov_mean))
+  
+  library(geobr)
+read_municipality()->mun_br
+read_biomes()-> biomas
+read_state()-> states
+states %>% 
+  filter(abbrev_state == "PI" |
+         abbrev_state == "CE" |
+           abbrev_state == "RN"|
+           abbrev_state =="PB" |
+           abbrev_state =="PE" |
+           abbrev_state =="AL" |
+           abbrev_state =="SE" |
+           abbrev_state =="BA" |
+           abbrev_state =="MG" ) %>% 
+  glimpse-> ne_sate
+
+sd(table_analysis7$vari_nvc, na.rm = T)
+mean(table_analysis7$vari_nvc, na.rm = T) +sd(table_analysis7$vari_nvc, na.rm = T) -> sd_positive
+mean(table_analysis7$vari_nvc, na.rm = T) - sd(table_analysis7$vari_nvc, na.rm = T) -> sd_negative
+
+mun_br %>% 
+  select(code_muni, geom) %>% 
+  right_join(y= table_summary_pov, by = "code_muni") %>% 
+  glimpse %>% 
+  ggplot()+
+  geom_sf(data = ne_sate$geom)+
+  geom_sf(data= table_summary_pov$geom, aes(fill =cat_quad))
+  
+table_variation %>%
+  mutate(code_muni = as.factor(code_muni)) %>% 
+  left_join(y = table_agrifamiliar, by="code_muni") %>%
+  left_join(y = table_agrifamiliar_area, by="code_muni") %>%
+  mutate(code_muni = as.factor(code_muni),
+         familyAgri_area = as.double(familyAgri_area),
+         area_familiar_perc = (familyAgri_area/area_estab)*100) %>% 
+  na.omit() %>% 
+  glimpse ->table_vari2
+
+table_vari2 %>%   
+ggplot(aes(x=vari_nvc, y=area_familiar_perc, color = cat_quad))+
+  geom_point()+
+  #geom_smooth(method = "loess")+
+  geom_hline(yintercept = 49.33959)
+
+table_variation %>%
+  mutate(code_muni = as.factor(code_muni)) %>% 
+  left_join(y = table_agrifamiliar, by="code_muni") %>%
+  left_join(y = table_agrifamiliar_area, by="code_muni") %>%
+  mutate(code_muni = as.factor(code_muni),
+         familyAgri_area = as.double(familyAgri_area),
+         area_familiar_perc = (familyAgri_area/area_estab)*100) %>% 
+  na.omit() %>% 
+  left_join(y= select(mun_br,code_muni, geom), by = "code_muni") %>% 
+  glimpse ->table_vari2
+  
+ggplot()+
+  #geom_sf(data = ne_sate$geom)+
+  geom_sf(data = table_vari2$geom, aes(fill = table_vari2$area_familiar_perc))+
+scale_fill_viridis_c()
+
+table_vari2 %>% 
+  left_join(y= table_agrifamiliar_2017, by="code_muni") %>% 
+  left_join(y= table_agrifamiliar_area_2017, by="code_muni") %>% 
+  mutate(area_familiar_perc_17 = (area_agri_familiar_17/area_estab_17)*100,
+         vari_perc_area_familiar = area_familiar_perc_17 - area_familiar_perc) %>% 
+  na.omit() %>% 
+  glimpse -> table_vari3
+
+ggtern(data=table_vari3, aes(x=vari_nvc, y=vari_pop_perc, z=vari_perc_area_familiar)) +
+  #scale_T_continuous(limits = c(-100,100))+
+  #scale_L_continuous(limits = c(-100,100))+
+  #scale_R_continuous(limits = c(-100,100))+
+  limit_tern(10,10,10)+
+  geom_point()
+
+  pca<-prcomp(table_vari3[,c(2,3,24)])
+  summary(pca)
+  pca$x
+  
+  biplot(pca)
+
+  table_summary_pov %>% 
+    ungroup %>% 
+    distinct(code_muni, .keep_all = T) %>% 
+    glimpse-> table_summary_pov
+  
+  table_analysis7 %>% 
+    group_by(code_muni) %>% 
+    summarise(shdi_NA_mean = mean(shdi_NA),
+              vari_pop_perc = vari_pop_perc,
+              vari_nvc = vari_nvc) %>% 
+    mutate(code_muni = as.factor(code_muni)) %>% 
+    right_join(y= table_vari3, by = "code_muni") %>% 
+    distinct(code_muni, .keep_all = T) %>% 
+    #left_join(y = table_summary_pov, by="code_muni") %>% 
+    glimpse -> table_analysis8
+
+  table_summary_pov %>% 
+    left_join(table_analysis8, by = "code_muni") %>% 
+    filter(code_muni != 2100907) %>% 
+    glimpse %>% 
+    #lm(data = ., shdi_NA_mean ~ cat_quad.x) %>% 
+    #summary()
+  
+  ggplot(aes(x=cat_quad.x, y = shdi_NA_mean))+
+    geom_boxplot()
+  
