@@ -19,6 +19,9 @@ library(ggtern)
 #data----
 raster(x = here("data/mapbiomas-brazil-collection-50-2010_5880.tif")) ->mapbiomas_caat
 raster(x = here("data/mapbiomas-brazil-collection-60-caatinga-2000_5880.tif")) ->mapbiomas_caat_2000
+raster(x = here("data/mapbiomas-brazil-collection-60-caatinga-2006_5880.tif")) ->mapbiomas_caat_2006
+raster(x = here("data/mapbiomas-brazil-collection-60-caatinga-2017_5880.tif")) ->mapbiomas_caat_2017
+
 st_read(dsn = here("data/buffer_5km.shp")) -> all_buff
 st_cast(all_buff, "MULTIPOLYGON") -> all_buff2
 st_read(dsn = here("data/caat_points.shp"))-> caat_points
@@ -51,9 +54,33 @@ landscapemetrics::sample_lsm(landscape = mapbiomas_caat_2000,
                              return_raster = F,
                              #progress = T,
                              #what = "lsm_c_ca"
-                             level = c("class", "class"),
-                             metric = c("ca","pland")
+                             level = c("class", "class", "landscape"),
+                             metric = c("ca","pland", "shdi")
                              )-> buff_lsm_2000
+
+landscapemetrics::sample_lsm(landscape = mapbiomas_caat_2006,
+                             y = all_buff,
+                             plot_id = all_buff$id_buff,
+                             #shape = "circle",
+                             #size = 5000,
+                             #all_classes = T,
+                             return_raster = F,
+                             #progress = T,
+                             #what = "lsm_c_ca"
+                             level = c("class", "class", "landscape"),
+                             metric = c("ca","pland", "shdi"))-> buff_lsm_2006
+
+landscapemetrics::sample_lsm(landscape = mapbiomas_caat_2017,
+                             y = all_buff,
+                             plot_id = all_buff$id_buff,
+                             #shape = "circle",
+                             #size = 5000,
+                             #all_classes = T,
+                             return_raster = F,
+                             #progress = T,
+                             #what = "lsm_c_ca"
+                             level = c("class", "class", "landscape"),
+                             metric = c("ca","pland", "shdi"))-> buff_lsm_2017
 
 ##data on people and households inside buffers----
 data_pop_vars_forest%>%
@@ -156,6 +183,56 @@ buff_lsm%>%
   glimpse -> table_analysis3
 
 table_analysis3[,2:48][is.na(table_analysis3[,2:48])] <- 0
+
+buff_lsm_2000 %>% 
+  select(plot_id, metric, class, value) %>% 
+  filter(plot_id != 1606) %>% 
+  pivot_wider(id_cols = plot_id,
+              names_sep = "_",
+              names_from = c(metric, class),
+              values_from = value
+              ) %>% 
+  dplyr::select(id_buff, pland_3, pland_4, pland_5, pland_6, pland_7, pland_8,
+                pland_9, pland_10, pland_11, pland_12, pland_13, pland_14,
+                pland_15, pland_16, pland_17, pland_18, pland_19, pland_20,
+                pland_21, pland_22, pland_23, pland_24, pland_25, pland_26,
+                pland_27, pland_28, pland_29, pland_30, pland_31, pland_32, 
+                pland_33, pland_34, pland_35, pland_36, pland_37, pland_38,
+                pland_39, pland_40, pland_41, pland_42, pland_43, pland_44,
+                pland_45, pland_46, pland_47, pland_48
+                ) %>% 
+  dplyr::rename(pland_forest = pland_3,
+                pland_savanna = pland_4,
+                pland_mangrove = pland_5,
+                 = pland_6,
+                pland_wetland = pland_11,
+                pland_grass = pland_12,
+                pland_salt = pland_32,
+                pland_rocky = pland_29,
+                pland_otherVeg = pland_13,
+                pland_pasture = pland_15,
+                pland_soy = pland_39,
+                pland_sugar = pland_20,
+                pland_otherTcrop = pland_41,
+                pland_coffe = pland_46,
+                pland_otherPcrop = pland_48,
+                pland_Fplantation = pland_9,
+                pland_mosaicAP = pland_21,
+                pland_sand = pland_23,
+                pland_urban = pland_24,
+                pland_mine = pland_30,
+                pland_otherNveg = pland_25,
+                pland_water = pland_33,
+                pland_aquacult = pland_31
+  ) %>% 
+  #dplyr::mutate(pland_nvc = pland_forest + pland_savanna + pland_grass + pland_rocky +
+  #                pland_mangrove + pland_wetland + pland_otherVeg + pland_salt,
+  #              pland_agri = pland_pasture + pland_mosaicAP + pland_otherPcrop + 
+  #                pland_otherTcrop + pland_sugar + pland_aquacult + pland_coffe + 
+  #                pland_Fplantation + pland_soy, .keep="unused"
+  #) %>% 
+  #left_join(y=table_analysis2, by = c("plot_id" = "id_buff")) %>% 
+  glimpse
 
 #buff_lsm %>%
 #  dplyr::group_by(plot_id, metric, class) %>%
