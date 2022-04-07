@@ -317,4 +317,25 @@ tab_1 %>%
                                           false = "non-outlier"))) %>% 
   glimpse -> tab_1
 
+tab_1 %>% 
+  select(-geom_centroid_buff, -geom_buff, - geom_mun) %>% 
+  glimpse -> tab_1
+
+mean(tab_1$vari_perc_pop_rural, na.rm=T) + sd(tab_1$vari_perc_pop_rural, na.rm=T)
+mean(tab_1$vari_perc_pop_rural, na.rm=T) - sd(tab_1$vari_perc_pop_rural, na.rm=T)
+
+tab_1 %>% 
+  mutate(pop_outlier = if_else(condition = vari_perc_pop_rural > 51.09549,
+                               true = "outlier",
+                          false = if_else(vari_perc_pop_rural < -29.51439,
+                                          true = "outlier",
+                                          false = "non-outlier"))) %>% 
+  glimpse-> tab_1
+
+rename(tab_1, nvc_outlier = sd_cat) %>% glimpse -> tab_1
+
+tab_1 %>% 
+  mutate(vari_shdi = shdi_17 - shdi_06) %>% 
+  glimpse -> tab_1
+
 write.csv(x = tab_1, file = here("tabela_geral.csv"))
