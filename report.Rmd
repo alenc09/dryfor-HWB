@@ -1,0 +1,8 @@
+---
+title: "Forest-proximate people in a changing Caatinga"
+author: "Lucas Alencar; Luke Parry & Felipe Melo"
+date: "12/04/2022"
+output: html_document
+---
+
+1. Reasoning

@@ -16,7 +16,7 @@ ggplot(data = tab_1, aes(x = vari_perc_nvc, y = vari_perc_pop_rural, color = cat
   ylim(-100,200)+
   geom_hline(yintercept = 0)+
   geom_vline(xintercept = 0)+
-  labs(title = "nvc and pop variation in all buffers")+
+  labs(title = "nvc and pop relation in all buffers")+
   theme_classic()
 
 tab_1 %>%  
@@ -26,46 +26,47 @@ ggplot(aes(x = vari_perc_nvc, y = vari_perc_pop_rural, color = cat_change))+
   ylim(-100,200)+
   geom_hline(yintercept = 0)+
   geom_vline(xintercept = 0)+
-  labs(title = "nvc and pop variation in 'outliers' ")+
+  labs(title = "nvc and pop relation in 'outliers' ")+
   theme_classic()
 
 ##family agriculture----
 tab_1 %>%  
-  filter(nvc_outlier == "outlier" & pop_outlier == "outlier") %>%
-  ggplot(aes(x = vari_perc_nvc, y = vari_perc_area_agrifam#, color = cat_change
+  #filter(nvc_outlier == "outlier" & pop_outlier == "outlier") %>%
+  ggplot(aes(x = vari_perc_nvc, y = vari_estab_agrifam, color = cat_change
              ))+
-  geom_point()+
+  geom_point(alpha = 0.2)+
+  geom_smooth(method = "lm")+
   ylim(-100,200)+
   geom_hline(yintercept = 0)+
   geom_vline(xintercept = 0)+
-  labs(title = "nvc and agrifam variation in 'outliers' ")+
+  labs(title = "nvc and agrifam relation in 'outliers' ")+
   theme_classic()
 
 tab_1 %>%  
   filter(nvc_outlier == "outlier" & pop_outlier == "outlier") %>%
-  ggplot(aes(x = vari_perc_pop_rural, y = vari_perc_area_agrifam#, color = cat_change
+  ggplot(aes(x = vari_perc_pop_rural, y = vari_perc_area_agrifam, color = cat_change
              ))+
   geom_point()+
-  #geom_smooth(method = "lm")+
+  geom_smooth(method = "lm")+
   ylim(-100,200)+
   geom_hline(yintercept = 0)+
   geom_vline(xintercept = 0)+
-  labs(title = "pop and agrifam variation in 'outliers' ")+
+  labs(title = "pop and agrifam relation in 'outliers' ")+
   theme_classic()
 
 tab_1 %>%  
-  filter(nvc_outlier == "outlier" & pop_outlier == "outlier") %>%
+  #filter(nvc_outlier == "outlier" & pop_outlier == "outlier") %>%
   ggplot(aes(x = cat_change, y = vari_perc_area_agrifam, color = cat_change))+
   geom_boxplot()+
   #geom_smooth(method = "lm")+
   #ylim(-100,200)+
-  geom_hline(yintercept = 0)+
+  geom_hline(yintercept = 0, type = "dot")+
   #geom_vline(xintercept = 0)+
   #labs(title = "pop and agrifam variation in 'outliers' ")+
   theme_classic()
 
 tab_1 %>%  
-  filter(nvc_outlier == "outlier" & pop_outlier == "outlier") %>%
+  #filter(nvc_outlier == "outlier" & pop_outlier == "outlier") %>%
   ggplot(aes(x = cat_change, y = vari_estab_agrifam, color = cat_change))+
   geom_boxplot()+
   #geom_smooth(method = "lm")+
@@ -74,6 +75,7 @@ tab_1 %>%
   #geom_vline(xintercept = 0)+
   #labs(title = "pop and agrifam variation in 'outliers' ")+
   theme_classic()
+
 ##landscape diversity----
 tab_1 %>%  
   filter(nvc_outlier == "outlier" & pop_outlier == "outlier") %>%
@@ -83,44 +85,60 @@ tab_1 %>%
   #ylim(-100,200)+
   geom_hline(yintercept = 0)+
   geom_vline(xintercept = 0)+
-  labs(title = "pop and agrifam variation in 'outliers' ")+
+  labs(title = "pop and landscape diversity variation in 'outliers' ")+
   theme_classic()
 
 ##distance to municipality seat----
 tab_1 %>%  
-  filter(nvc_outlier == "outlier" & pop_outlier == "outlier") %>%
-  ggplot(aes(y = vari_perc_pop_rural, x = dist_near_sede, color = cat_change))+
-  geom_point()+
-  geom_smooth(method = "lm")+
-  #ylim(-100,200)+
-  geom_hline(yintercept = 0)+
-  geom_vline(xintercept = 0)+
-  labs(title = "pop and agrifam variation in 'outliers' ")+
-  theme_classic()
-
-tab_1 %>%  
-  filter(nvc_outlier == "outlier" & pop_outlier == "outlier") %>%
-  ggplot(aes(y = vari_perc_nvc, x = dist_near_sede, color = cat_change))+
-  geom_point()+
-  geom_smooth(method = "lm")+
-  #ylim(-100,200)+
-  geom_hline(yintercept = 0)+
-  geom_vline(xintercept = 0)+
-  labs(title = "pop and agrifam variation in 'outliers' ")+
-  theme_classic()
-
-##variation in urban population----
-tab_1 %>%  
-  filter(nvc_outlier == "outlier" & pop_outlier == "outlier") %>%
-  ggplot(aes(y = vari_perc_pop_rural, x = vari_perc_pop_urb
-             #, color = cat_change
+  
+  #filter(nvc_outlier == "outlier" & pop_outlier == "outlier") %>%
+  ggplot(aes(y = vari_perc_pop_rural, x = dist_near_sede#, color = cat_change
              ))+
   geom_point()+
   geom_smooth(method = "lm")+
   #ylim(-100,200)+
   geom_hline(yintercept = 0)+
   geom_vline(xintercept = 0)+
-  #labs(title = "pop and agrifam variation in 'outliers' ")+
+  labs(title = "pop in relation to distance to nearest sede in 'outliers' ")+
+  theme_classic()
+
+tab_1 %>%  
+  #filter(nvc_outlier == "outlier" & pop_outlier == "outlier") %>%
+  ggplot(aes(y = vari_perc_nvc, x = dist_near_sede#, color = cat_change
+             ))+
+  geom_point()+
+  geom_smooth(method = "lm")+
+  #ylim(-100,200)+
+  geom_hline(yintercept = 0)+
+  geom_vline(xintercept = 0)+
+  labs(title = "pop in relation to distance to nearest sede in 'outliers' ")+
+  theme_classic()
+
+tab_1 %>%  
+  #filter(nvc_outlier == "outlier" & pop_outlier == "outlier") %>%
+  ggplot()+
+  geom_point(aes(y = log(pop_rural_WP_06), x = dist_near_sede))+
+  geom_point(aes(y = log(pop_rural_WP_17), x = dist_near_sede))+
+  geom_smooth(method = "lm", aes(y = log(pop_rural_WP_06), x = dist_near_sede, color = "red"))+
+  geom_smooth(method = "lm", aes(y = log(pop_rural_WP_17), x = dist_near_sede))+
+  #ylim(-100,200)+
+  geom_hline(yintercept = 0)+
+  geom_vline(xintercept = 0)+
+  labs(title = "pop in relation to distance to nearest sede in 'outliers' ")+
+  theme_classic()
+
+##variation in urban population----
+tab_1 %>%  
+  #filter(nvc_outlier == "outlier" & pop_outlier == "outlier") %>%
+  ggplot(aes(y = vari_perc_pop_rural, x = vari_perc_pop_urb
+             #, color = cat_change
+             ))+
+  geom_point()+
+  geom_smooth(method = "lm")+
+  ylim(-100,200)+
+  geom_hline(yintercept = 0)+
+  geom_vline(xintercept = 0)+
+  labs(title = "pop rural and urban variation in 'outliers' ")+
   theme_classic()
 
 tab_1 %>%  
@@ -133,7 +151,7 @@ tab_1 %>%
   #ylim(-100,200)+
   geom_hline(yintercept = 0)+
   geom_vline(xintercept = 0)+
-  #labs(title = "pop and agrifam variation in 'outliers' ")+
+  labs(title = "nvc and urban pop relation in 'outliers' ")+
   theme_classic()
 
 ##maps----
