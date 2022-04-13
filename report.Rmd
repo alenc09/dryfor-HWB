@@ -5,4 +5,28 @@ date: "12/04/2022"
 output: html_document
 ---
 
-1. Reasoning
+<!-- 1. Reasoning -->
+
+<!-- People living within or nearby forest are among the poorest in the world, not only in monetary income, but at multiple levels of their lives (e.g. health assistance - CIT, o que mais???). This population is mostly invisible to authorities (???) and policies (CIT), partially due to the remoteness of they housing and also to the lack of political power. Forest-proximate people are often targets of land-grabbing, for example, and lose their land through many other mechanisms, such as disposession by large landowners and land investors, or abandonment during climatic shocks (e.g. droughts or floods) or even in search of better lives elsewhere. Quantifying the number of people  proximate to forests is a first and necessary step to design policies aiming sustainable development of those communities. an attempt to quantify the number of forest-proximate people was made by Newton et al, but they explicitly (???) set aside dryland forest areas due to ... Here we build a case-study to explore the challenges in quantifyig FPP in a dryland forest, but also to evaluate the population-forest dynamics in relation to change in land equity. -->
+
+1. Objective one:
+
+1.1 where in the Caatinga is it reasonable to define forested areas?
+  - núnero de paisagens florestadas por porcentage de cobertura de floresta vs nvc
+    - 10%... 20...100
+    - Crítica ao que o mapbiomas chama de savana... 
+  
+1.2 How many forest-proximate people are there? and sensitive is this to the method of defining forest, proximity(?), or population estimates?
+```{r}
+load("/home/alenc/Documents/Doutorado/tese/cap0/dryfor-HWB/dev_test2.RData")
+ggpubr::ggarrange(fpp_thresholds_2000, fpp_thresholds_2010)
+
+```
+Read dots are the number of FPP using LandScan data and green using WorldPop data.
+
+- próximos passos: 
+ - Calcular a população de FPP da caatinga usando somente a classe floresta (ao invés de nvc)
+ 
+1.3 What is the trajectory of change over time, (including influence of method) and does population change vary geographically?
+  - Figura 1
+  

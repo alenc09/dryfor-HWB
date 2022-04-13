@@ -490,14 +490,15 @@ pop_LS_2000_thresh %>%
   select(threshold, pop_ibge_2010, dom_ibge_2010, pop_LS_2000, pop_WP_2000, pop_LS_2010, pop_WP_2010) %>% 
   glimpse -> pop_thresh_all
 
+
 ggplot(data = pop_thresh_all)+
   geom_point(aes(x = threshold, y = pop_LS_2000), color="red")+
   geom_point(aes(x = threshold, y = pop_WP_2000), color="green")+
-  ylab("forest proximate people") +
+    ylab("forest proximate people") +
   xlab("forest threshold") +
   labs(title = "2000") +
   scale_y_continuous(breaks = c(0, 1250000, 2500000, 3750000,5000000, 6250000, 7500000, 8750000, 10000000))+
-  theme_classic()-> fpp_thresholds_2000
+  theme_classic() #-> fpp_thresholds_2000
 ggplot(data = pop_thresh_all)+
   geom_point(aes(x = threshold, y = pop_LS_2010), color="red")+
   geom_point(aes(x = threshold, y = pop_WP_2010), color="green")+
