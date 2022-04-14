@@ -507,9 +507,13 @@ ggplot(data = pop_thresh_all)+
   labs(title = "2010") +
   scale_y_continuous(breaks = c(0, 1250000, 2500000, 3750000,5000000, 6250000, 7500000, 8750000, 10000000))+
   theme_classic()-> fpp_thresholds_2010
-ggpubr::ggarrange(fpp_thresholds_2000, fpp_thresholds_2010)
 
+ggpubr::ggarrange(fpp_thresholds_2000, fpp_thresholds_2010)-> fpp_thresholds
+ggplot2::ggsave(plot = fpp_thresholds, here::here("img/fig1.jpg"))
+
+                
 ###people and forest change----
+
 table_analysis4 %>% 
   select(id_buff, code_muni) %>% 
   left_join(y = table_analysis5, by= "id_buff") %>% 

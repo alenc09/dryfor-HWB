@@ -8,7 +8,7 @@ library(here)
 library(readxl)
 library(tidyr)
 library(geobr)
-library()
+
 
 #data----
 read.csv(file = here("buff_lsm_2006.csv"), sep = ",", dec=".")-> buff_lsm_2006
@@ -297,13 +297,20 @@ tab_1 %>%
   glimpse ->tab_1
 
 tab_1 %>%
-  mutate(cat_change = if_else(condition = vari_perc_nvc<0 & vari_perc_pop_rural<0,
-                              true = "PP",
-                              false = if_else(condition =  vari_perc_nvc<0 & vari_perc_pop_rural>0,
-                                              true = "PG",
-                                              false = if_else(vari_perc_nvc>0 & vari_perc_pop_rural>0,
-                                                              true = "GG",
-                                                              false = "GP")))) %>% 
+  mutate(cat_change = if_else(condition = vari_perc_nvc==0 | vari_perc_pop_rural==0,
+                              true = "estable",
+                              false = if_else(condition = vari_perc_nvc<0 & vari_perc_pop_rural<0,
+                                              true = "PP",
+                                              false = if_else(condition =  vari_perc_nvc<0 & vari_perc_pop_rural>0,
+                                                              true = "PG",
+                                                              false = if_else(vari_perc_nvc>0 & vari_perc_pop_rural>0,
+                                                                              true = "GG",
+                                                                              false = "GP"
+                                                                              )
+                                                              )
+                                              )
+                              )
+         ) %>% 
   glimpse ->tab_1
 
 
@@ -338,4 +345,5 @@ tab_1 %>%
   mutate(vari_shdi = shdi_17 - shdi_06) %>% 
   glimpse -> tab_1
 
+#export----
 write.csv(x = tab_1, file = here("tabela_geral.csv"))

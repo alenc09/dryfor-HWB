@@ -3,30 +3,136 @@ title: "Forest-proximate people in a changing Caatinga"
 author: "Lucas Alencar; Luke Parry & Felipe Melo"
 date: "12/04/2022"
 output: html_document
+
 ---
 
 <!-- 1. Reasoning -->
 
 <!-- People living within or nearby forest are among the poorest in the world, not only in monetary income, but at multiple levels of their lives (e.g. health assistance - CIT, o que mais???). This population is mostly invisible to authorities (???) and policies (CIT), partially due to the remoteness of they housing and also to the lack of political power. Forest-proximate people are often targets of land-grabbing, for example, and lose their land through many other mechanisms, such as disposession by large landowners and land investors, or abandonment during climatic shocks (e.g. droughts or floods) or even in search of better lives elsewhere. Quantifying the number of people  proximate to forests is a first and necessary step to design policies aiming sustainable development of those communities. an attempt to quantify the number of forest-proximate people was made by Newton et al, but they explicitly (???) set aside dryland forest areas due to ... Here we build a case-study to explore the challenges in quantifyig FPP in a dryland forest, but also to evaluate the population-forest dynamics in relation to change in land equity. -->
 
-1. Objective one:
+## 1. Objective one: Measuring the Caatinga’s forest cover and censusing the Caatinga’s forest-proximate population
 
-1.1 where in the Caatinga is it reasonable to define forested areas?
-  - núnero de paisagens florestadas por porcentage de cobertura de floresta vs nvc
-    - 10%... 20...100
-    - Crítica ao que o mapbiomas chama de savana... 
+<br/>
+
+### 1.1 - Where in the Caatinga is it reasonable to define forested areas?
+
+- número de paisagens florestadas por porcentage de cobertura de floresta vs nvc
+  - Em diferentes porcentagens de covertura (10%... 20...100)
+  - Crítica ao que o mapbiomas chama de savana... 
   
-1.2 How many forest-proximate people are there? and sensitive is this to the method of defining forest, proximity(?), or population estimates?
-```{r}
-load("/home/alenc/Documents/Doutorado/tese/cap0/dryfor-HWB/dev_test2.RData")
-ggpubr::ggarrange(fpp_thresholds_2000, fpp_thresholds_2010)
+<br/>
+
+### 1.2 How many forest-proximate people are there? and sensitive is this to the method of defining forest, proximity(?), or population estimates?
+
+```{r echo=FALSE, warning=FALSE}
+#library(knitr)
+knitr::include_graphics("/home/alenc/Documents/Doutorado/tese/cap0/dryfor-HWB/img/fig1.jpg")
 
 ```
 Read dots are the number of FPP using LandScan data and green using WorldPop data.
 
-- próximos passos: 
- - Calcular a população de FPP da caatinga usando somente a classe floresta (ao invés de nvc)
- 
-1.3 What is the trajectory of change over time, (including influence of method) and does population change vary geographically?
-  - Figura 1
-  
+- Próximos passos: 
+  - Calcular a população de FPP da caatinga usando somente a classe floresta (ao invés de nvc)
+
+<br/>
+
+## 1.3 What is the trajectory of change over time, (including influence of method) and does population change vary geographically?
+
+- map of population change
+```{r echo=FALSE}
+knitr::include_graphics(path = "/home/alenc/Documents/Doutorado/tese/cap0/dryfor-HWB/img/map_pop_change.jpg")
+```
+<br/>
+
+## 2. Objective 2: Understanding the linkages between population change and changing forest coverage
+
+### 2.1 - What is the relationship between rural population size change and changing forest cover?
+```{r echo=FALSE}
+knitr::include_graphics(path = "/home/alenc/Documents/Doutorado/tese/cap0/dryfor-HWB/img/pop_nvc.jpg")
+```
+
+## 2.2 what kinds of frontier advance (or reforestation areas) can we identity? what kinds of forest regeneration can we identify?
+
+####  - Off-farm livelihoos: Gain in forest cover and population. People are still living in farm, but producing less, either by better wages in nearby towns (e.g. industries or service sectors) or social assistance (e.g. bolsa família)
+
+####  - Land abandonment: gain in forest cover but losing people. People leaving rural areas probably due to shocks, either climatic (e.g. drought) or economic (e.g. end of economic cycle)
+
+####  - Small-holders settlements: Loses in forest cover but gain in population size. Possibly a populist frontier where families are settled in previously depopulated area or a simple increase in rural families size
+
+####  - Dispossession: Loss in forest cover and population. Probably an advance of capitalist frontier, where larger landholders buy small agricultural family farms for investment and commodity production. Other phenomenon such desertification, can also cause de forest-people change pattern.
+
+```{r echo=FALSE}
+knitr::include_graphics("/home/alenc/Documents/Doutorado/tese/cap0/dryfor-HWB/img/map_cat_change.jpg")
+```
+
+<br/>
+
+### 2.3. in which situation the social vulnerability (measured by the number of families under social assistance programes - CADUNICO) increase?
+
+<br/>
+
+### 2.4 censusing the number of municipalities, people and forest cover in each of these 4 kinds of municipality
+
+<br/>
+
+## 3. Objective 3: Understanding the linkages between population change, social (in)equity, and changing forests
+
+### 3.1 Can we see signs of land (in)equality at deforestation and reforestation frontiers?
+```{r echo=FALSE}
+knitr::include_graphics("/home/alenc/Documents/Doutorado/tese/cap0/dryfor-HWB/img/agrifam_nvc.jpg")
+knitr::include_graphics("/home/alenc/Documents/Doutorado/tese/cap0/dryfor-HWB/img/agrifam_cat-change.jpg")
+knitr::include_graphics("/home/alenc/Documents/Doutorado/tese/cap0/dryfor-HWB/img/map_agrifam_change.jpg")
+```
+
+<br/>
+
+### 3.2 what are the relationships between re/deforestation and monetary income poverty?
+  Tentar usar os dados do cadunico para responder essa perguntar. re/deforestatino and families in vulnerable situation
+
+<br/>
+
+### 3.3 How is rural population change associated with levels of, and changes in, monetary income poverty? Tentar usar os dados do cadunico para responder essa perguntar. (De)Population and families in vulnerable situation
+
+<br/>
+
+### 3.4 what demographic changes are occuring within the Caatinga’s forest-proximate population?
+  Have no idea how to do this
+
+<br/>
+
+### 3.5. how is changes in population size associated with landscape (forest) heterogeneity?
+```{r echo=FALSE}
+knitr::include_graphics("/home/alenc/Documents/Doutorado/tese/cap0/dryfor-HWB/img/shdi_pop_all.jpg")
+```
+
+<br/>
+
+### 3.6 what is the role of water insecurity vulnerability and rural population change?
+  Have to include WIVI data on analysis
+
+<br/>
+
+## 4. Objective 4: understanding linkages between rural population shifts, social (in)equity, changing forests and urbanization.
+
+<br/>
+
+### 4.1 what is linkage between change in forest-proximate population and growth of local urban centre?
+```{r echo=FALSE}
+knitr::include_graphics("/home/alenc/Documents/Doutorado/tese/cap0/dryfor-HWB/img/pop_rural_urb.jpg")
+```
+
+### 4.2 what is linkage between land (in)equity and growth of local urban population?
+```{r echo=FALSE}
+knitr::include_graphics("/home/alenc/Documents/Doutorado/tese/cap0/dryfor-HWB/img/agrifam_popUrb.jpg")
+```
+
+### 4.3 what is the relationship between urban proximity and change in the forest-proximate population?
+```{r echo=FALSE}
+knitr::include_graphics("/home/alenc/Documents/Doutorado/tese/cap0/dryfor-HWB/img/popRural_dist.jpg")
+```
+
+### 4.4 how does urban proximity influence patterns of re/deforestation?
+```{r echo=FALSE}
+knitr::include_graphics("/home/alenc/Documents/Doutorado/tese/cap0/dryfor-HWB/img/nvc_change_dist.jpg")
+```
+
