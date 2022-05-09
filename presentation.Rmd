@@ -1,7 +1,7 @@
 ---
-title: "Forest proximate people... in Caatinga"
+title: "Forest proximate people in Caatinga"
 subtitle: 
-author: "Lucas Alenar"
+author: "Lucas Alencar"
 institute: "UFPE"
 date: "12/11/2021 (updated: `r Sys.Date()`)"
 output:
@@ -12,188 +12,37 @@ output:
       highlightLines: true
       countIncrementalSlides: false
       ratio: "16:9"
+
 ---
 ```{r, include=FALSE} 
 #library
-library(raster)
-library(geobr)
-library(dplyr)
 library(here)
-library(sf)
-library(ggplot2)
-load(here(".RData"))
-```
-
-class: inverse
-#data
-
-- [World Pop](https://www.worldpop.org/): Constrained data
-  - People per pixel
-  - ~3arc seconds (aprox. 100m at equator)
-  - data from 2020
-- [LandScan](https://landscan.ornl.gov/)
-  - People per pixel
-  - 1km at equator
-  - data from 2010, 2015, 2019
-- [IBGE Grade Estatística](https://geoftp.ibge.gov.br/recortes_para_fins_estatisticos/grade_estatistica/censo_2010/grade_estatistica.pdf)
-  - People per "pixel"
-  - 1km x 1km
-  - data from 2010 census
---
-
-- [Forested Plots](https://www.science.org/doi/10.1126/science.aam6527)
-  - Each plot classified as forest (>20% of tree cover) and non-forest
-  - 6,200 plots in Caatinga, but 1,606 forested
-
---
-
-- Caatinga shape
-  - From Geobr
-  - 2019 delimitation
-
----
-class: inverse, center
-## 10km buffer with union functions
-```{r, echo=F, fig.height=8, fig.width=9}
-plot(caat_shp_polybr$geom)
-plot(buff_10km_union, add = T)
 ```
 
 ---
-class: inverse, center
-## Zoom in the NE of Caatinga
-```{r echo=F, fig.height=8, fig.width=9, message=FALSE, warning=FALSE}
-ggplot() +
-  geom_raster(data = pop_caat_tibble, aes(x=x, y=y, fill=bra_ppp_2020_UNadj_constrained))+
-  geom_sf(data = caat_shp_polybr, fill= NA, colour = "black", size = .3) +
-  geom_sf(data = plot_caat_polybr, size =0.1) +
-  geom_sf(data=st_as_sf(buff_1km_union), fill = NA, col = "red") +
-  geom_sf(data=st_as_sf(buff_5km_union), fill = NA, col = "red") +
-  geom_sf(data=st_as_sf(buff_10km_union), fill = NA, col = "red") +
-  coord_cartesian(xlim = c(6500000,7000000), ylim = c(9000000,9500000))+
-  coord_sf(xlim = c(6800000,7000000), ylim = c(9000000,9200000))+
-  scale_fill_viridis_c(name = "Population in Caatinga") +
-  theme(panel.background = element_blank(),
-        axis.title = element_blank()
-  )
-```
+.center[
+#Forest dependent people in Caatinga]
 
----
-class: center
-```{r echo=FALSE}
+###Total population in Caatinga
 
-kableExtra::kable(df_results)
-```
+####Data: population grid from IBGE census 2010
 
----
-class:inverse
-background-image: url(img/grid_bastin.jpg)
-background-size: contain
-background-position: 50% 50%
-
-# **Bastin et al Samples of forest cover in drylands**
-
----
-class:inverse
-background-image: url(img/grid_bastin_sanharo.jpg)
-background-size: contain
-background-position: 50% 50%
-
-# **Closer look at Sanharó**
-
----
-class: inverse, center
-
-# frequency of forested plots by mapbiomas land cover
-```{r eval=FALSE, include=FALSE}
-freq_forest_landuse
-```
-
----
-# % of native vegetation (Mapbiomas) inside each buffer
-
-.pull-left[
-
-- Lack RAM for 30m resolution analysis
-```{r eval=FALSE, warning=FALSE, include=FALSE}
-raster(x="D:/lucas_alencar/downloads/caat_nvc.tif")-> caat_nvc
-plot(caat_nvc)
-```
-
+.pull-left[- Total population
+] 
+.pull-right[- Rural population
 ]
 
-.pull-rigth[
-
-- Aggregate forest cover to 240m resolution
-```{r eval=FALSE, warning=FALSE, include=FALSE}
-raster(x="D:/lucas_alencar/downloads/caat_nvc_240.tif")-> caat_nvc_240m
-plot(caat_nvc_240m)
+```{r echo=FALSE, fig.align='left'}
+knitr::include_graphics(path ="img/caat_total_pop.png")
 ```
 
-]
 
----
-# Comparing bastin and mapbiomas dataset...
-- 1km buffer -> 0,6% Caatinga nvc by mapbiomas
-- 5km buffer -> 15%
-- 10km buffer -> 46%
-
-
----
-# Population closed to forest by different datasets
-```{r eval=FALSE, include=FALSE}
-kableExtra::kable(df_pop_all)
-
+```{r echo=FALSE, fig.align='right', }
+knitr::include_graphics(path ="img/caat_rural_pop.png")
 ```
 
 ---
-# What can I do with this data?
-
---
-1. Evaluate uncertainty in FPP estimations
-
---
-2. Change of FPP over time
-
---
-3. Add socio-economic data to build a "profile" of FPP
-
---
-4. Forget about it and focus on the other chapters
-
----
-#The number and profile of forest proxiamte people in Caatinga
-
---
-1. We already have an estimate: 2.9 million people within 5km
-
-2. The profile
-- 2.1 Forest-dependent people framework ([Newton et al, 2016](https://www.sciencedirect.com/science/article/pii/S0264837716300497?via%3Dihub))
-
-- 2.2 Multipoverty Index ([Aguilar & Sumner, 2020
-](https://www.sciencedirect.com/science/article/abs/pii/S0305750X19303651?via%3Dihub))
-
----
-#The number and profile of forest proxiamte people in Caatinga
-- 2.3 Forest
- - Bastin et al, 2018 (sample of forests in drylands)
- - sensivity test with mapbiomas data
-
-- 2.4 Proximate ("dependent")
- - 5km buffers (1 and 10km as sensivity test)
- - Remoteness (how to calculate?)
-
-- 2.5 People
- - Setor censitário 2010
- - Variables from 2010 and forest sample from 2015
- - try sensus tracs from censo agro 2017
-
-- 2.6 Check if the buffers around forests represents well the people inside sensus tracs
- - and then if data from sensus tracs can represent socioeconomic characteristics of FPP
-
----
-#Forest proximate vs away forest people
-
-Compare income between sensus tracts with and without forests
-
+#Next steps
+###Compare socioeconomic conditons
 - Use matching to find pairs
+

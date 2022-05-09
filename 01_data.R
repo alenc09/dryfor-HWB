@@ -6,11 +6,15 @@ library(sf)
 library(here)
 library(dplyr)
 library(readxl)
+library(geobr)
+library(foreign)
+library(ggplot2)
+library(geobr)
 
-#data####
+#data----
 sf_use_s2(FALSE) #função para desativar a checagem de vértices duplicados
 
-##import####
+##import----
 list.files(path = here("data/unzip"), pattern=".shp$", full.names=TRUE)%>%
   lapply(X = .,read_sf)%>%
   do.call(what = rbind) %>%
@@ -32,7 +36,29 @@ st_read(dsn = here("data/ibge_pop_caat.shp")) -> ibge_grid_data
 read_sf(here("data/pop_data_5km_forest_sirgas.shp"))-> pop_data_5km_forest_sirgas
 read_sf(here("data/pop_data_5km_Nforest_sirgas.shp"))-> pop_data_5km_Nforest_sirgas
 
-##transformation####
+raster(x = here("data/pop_caat_polybr_1000.tif")) -> pop_caat_polybr_1000
+
+read_biomes(simplified = F) %>%
+  filter(name_biome == "Caatinga") %>%
+  glimpse -> caat_shp
+
+raster(x = here("data/bra_ppp_2020_UNadj_constrained.tif")) -> br_pop
+
+st_read(dsn = here("data/pop_buff_5km.shp")) -> pop_buff_5km
+st_read(dsn = here("data/ibge_pop_caat_rural_clean.shp")) -> ibge_pop_rural_caat
+st_read(dsn = here("data/pop_data_5km_forest_sirgas_clean.shp")) -> pop_data_5km_forest_sirgas_clean
+st_read(dsn = here("data/pop_data_5km_Nforest_sirgas.shp")) -> pop_data_5km_Nforest_sirgas_clean
+
+st_read(dsn = here("data/buff_5km_pop_rural_LS_2000.shp")) -> buff_5km_pop_rural_LS_2000
+st_read(dsn = here("data/buff_5km_pop_rural_LS_2007.shp")) -> buff_5km_pop_rural_LS_2007
+st_read(dsn = here("data/buff_5km_pop_rural_LS_2010.shp")) -> buff_5km_pop_rural_LS_2010
+st_read(dsn = here("data/buff_5km_pop_rural_WP_2000.shp")) -> buff_5km_pop_rural_WP_2000
+st_read(dsn = here("data/buff_5km_pop_rural_WP_2007.shp")) -> buff_5km_pop_rural_WP_2007
+st_read(dsn = here("data/buff_5km_pop_rural_WP_2010.shp")) -> buff_5km_pop_rural_WP_2010
+
+#read_statistical_grid(code_grid = "PE")-> grid_PE
+
+##transformation----
 sc_caat%>%
   dplyr::filter(TIPO== "RURAL") ->sc_rural_caat
 
@@ -57,6 +83,44 @@ df_plots %>% #filtering only plots in Caatinga
   .[caat_shp_polybr,] ->plot_caat_polybr
 
 st_intersection(x = ibge_pop_ne, y = sc_data_caat) -> ibge_pop_caat_sirgas
+
+raster::rasterToPoints(pop_caat_polybr_1000) %>% 
+  tibble::as_tibble() ->pop_caat_tibble
+
+st_transform(caat_shp, crs = 5880) ->caat_shp_polybr
+
+st_centroid(pop_buff_5km) -> cent_grid_buff
+
+st_intersection(x = pop_data_5km_forest_sirgas, y = cent_grid_buff) -> pop_data_5km_forest_unique_sirgas
+
+pop_data_5km_forest_sirgas_clean%>%
+  select(id_buff, CD_GEOC, ID_UNIC, POP, DOM_OCU, V1:V23, tre_cvr, lnd_s_c, geometry)%>%
+  glimpse() -> data_pop_vars_forest
+
+pop_data_5km_Nforest_sirgas_clean%>%
+  select(id_buff, CD_GEOC, ID_UNIC, POP, DOM_OCU, V1:V23, tre_cvr, lnd_s_c, geometry)%>%
+  glimpse() -> data_pop_vars_Nforest
+
+bind_rows(data_pop_vars_forest, data_pop_vars_Nforest)%>%
+  glimpse -> data_pop_vars_full
+
+buff_5km_pop_rural_LS_2000 %>%
+  select(id_buff, pop_sum) %>% 
+  rename(pop_LS_2000 = pop_sum) %>% 
+  right_join(y= select(tibble(buff_5km_pop_rural_LS_2007), id_buff, pop_sum), by = "id_buff") %>% 
+  rename(pop_LS_2007 = pop_sum) %>%
+  right_join(y= select(tibble(buff_5km_pop_rural_LS_2010), id_buff, pop_sum), by = "id_buff") %>% 
+  rename(pop_LS_2010 = pop_sum) %>%
+  right_join(y= select(tibble(buff_5km_pop_rural_WP_2000), id_buff, pop_sum), by = "id_buff") %>% 
+  rename(pop_WP_2000 = pop_sum) %>%
+  right_join(y= select(tibble(buff_5km_pop_rural_WP_2007), id_buff, pop_sum), by = "id_buff") %>% 
+  rename(pop_WP_2007 = pop_sum) %>%
+  right_join(y= select(tibble(buff_5km_pop_rural_WP_2010), id_buff, pop_sum), by = "id_buff") %>% 
+  rename(pop_WP_2010 = pop_sum) %>%
+  mutate(id_buff = as.integer(id_buff)) %>%
+  right_join(y= table_analysis5, by = "id_buff") %>%
+  rename(pop_IBGE_2010 = pop) %>% 
+  glimpse -> table_analysis6
 
 ###buffers----
 #### union----
@@ -101,66 +165,8 @@ st_intersection(x = ibge_grid_data,
                   crs = 4674)
                 )-> pop_data_5km_forest
 
-###Weighted means----
-perc_fun <- function(x,y){
-  (x/y)*100
-} 
-####forested plots----
-pop_data_5km_forest_sirgas%>%
-  as.data.frame()%>%
-  group_by(CD_GEOC, id_buff)%>%
-  dplyr::summarise(pop_sc_buff = sum(POP))%>%
-  glimpse() -> aeee_porraa_consegui
-
-pop_data_5km_forest_sirgas%>%
-  distinct(CD_GEOC, id_buff, .keep_all = T)%>%
-  left_join(x = ., y = aeee_porraa_consegui, by= c("CD_GEOC", "id_buff"))%>%
-  mutate(pop_prop = pop_sc_buff/V2 , .keep = "all")%>%
-  glimpse -> pop_prop_sc_buff
-
-pop_prop_sc_buff$pop_prop[pop_prop_sc_buff$pop_prop > 1] <- 1
-
-pop_prop_sc_buff%>%
-  as.data.frame()%>%
-  dplyr::select(id_buff, CD_GEOC, lnd_s_c, tre_cvr,V1, V5, V6, V7, V8, V9, V10, V11, V12, V13, V19, V20, V21, V22, V23, pop_prop)%>%
-  arrange(id_buff)%>%
-  group_by(id_buff)%>%
-  mutate(across(.cols = V1:V23, .fns =  list("wm" = ~ weighted.mean(x = ., w = pop_prop))))%>%
-  mutate(across(.cols = c(V5_wm:V11_wm, V19_wm:V21_wm), .fns = list("perc" = ~ perc_fun(x =., y = V1_wm))))%>%
-  mutate(across(.cols = c(V12_wm, V22_wm, V23_wm), .fns = list("perc" = ~ perc_fun(x =., y = V13_wm))))%>%
-  glimpse -> buff_vars_5km_forest
-  
-####Non-forested plots----
-pop_data_5km_Nforest_sirgas%>%
-  as.data.frame()%>%
-  group_by(CD_GEOC, id_buff)%>%
-  dplyr::summarise(pop_sc_buff = sum(POP))%>%
-  glimpse() -> aeee_porraa_consegui_2
-
-pop_data_5km_Nforest_sirgas%>%
-  distinct(CD_GEOC, id_buff, .keep_all = T)%>%
-  left_join(x = ., y = aeee_porraa_consegui_2, by= c("CD_GEOC", "id_buff"))%>%
-  mutate(pop_prop = pop_sc_buff/V2 , .keep = "all")%>%
-  glimpse -> pop_prop_sc_buff_5km_Nforest
-
-pop_prop_sc_buff_5km_Nforest$pop_prop[pop_prop_sc_buff_5km_Nforest$pop_prop > 1] <- 1
-
-pop_prop_sc_buff_5km_Nforest%>%
-  as.data.frame()%>%
-  dplyr::select(id_buff, CD_GEOC, lnd_s_c, tre_cvr,V1, V5, V6, V7, V8, V9, V10, V11, V12, V13, V19, V20, V21, V22, V23, pop_prop)%>%
-  arrange(id_buff)%>%
-  group_by(id_buff)%>%
-  mutate(across(.cols = V1:V23, .fns =  list("wm" = ~ weighted.mean(x = ., w = pop_prop))))%>%
-  mutate(across(.cols = c(V5_wm:V11_wm, V19_wm:V21_wm), .fns = list("perc" = ~ perc_fun(x =., y = V1_wm))))%>%
-  mutate(across(.cols = c(V12_wm, V22_wm, V23_wm), .fns = list("perc" = ~ perc_fun(x =., y = V13_wm))))%>%
-  glimpse -> buff_vars_5km_Nforest
-
-
-## visualization ####
-
-hist(buff_W.vars$v23_wm)
-
-# data export ####
+# data export----
+st_write(obj = ibge_pop_caat_clip, dsn = here("data/ibge_pop_caat_clip.shp"))
 st_write(obj = sc_data_caat, dsn = here("data/sc_rural_caat.shp"))
 st_write(obj = ibge_pop_caat_sirgas, dsn = here("data/ibge_pop_caat.shp"))
 st_write(obj = st_as_sf(buff_5km_forest), dsn = here("data/buff_5km_forest.shp"))
@@ -169,3 +175,4 @@ st_write(obj = st_as_sf(buff_1km_forest), dsn = here("data/buff_1km_forest.shp")
 st_write(obj = st_as_sf(buff_1km_Nforest), dsn = here("data/buff_1km_Nforest.shp"))
 st_write(obj = st_as_sf(buff_10km_forest), dsn = here("data/buff_10km_forest.shp"))
 st_write(obj = st_as_sf(buff_10km_Nforest), dsn = here("data/buff_10km_Nforest.shp"))
+st_write(obj = cent_grid_buff, dsn = here("data/cent_grid_buff.shp"))
