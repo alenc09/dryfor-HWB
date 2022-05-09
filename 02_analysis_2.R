@@ -8,8 +8,88 @@ library(sf)
 library(ggpubr)
 
 #data----
-read.csv(file = "/home/alenc/Documents/Doutorado/tese/cap0/dryfor-HWB/tabela_geral.csv")-> tab_1
+read.csv(file = here("tabela_geral.csv"))-> tab_1
+
 #análises exploratorias----
+##forested landscapes----
+tab_forest_06 %>% 
+  select(plot_id, pland_forest, pland_savanna, pland_grass, pland_rocky,
+  pland_mangrove, pland_wetland, pland_otherVeg, pland_salt) %>% 
+  left_join(y = select(tab_forest_17, plot_id,pland_forest, pland_savanna, pland_grass, pland_rocky,
+                       pland_mangrove, pland_wetland, pland_otherVeg, pland_salt), by = "plot_id" ) %>% 
+  mutate(pland_nvc_06 = pland_forest.x + pland_savanna.x + pland_grass.x + pland_rocky.x +
+         pland_mangrove.x + pland_wetland.x + pland_otherVeg.x + pland_salt.x,
+         pland_nvc_17 = pland_forest.y + pland_savanna.y + pland_grass.y + pland_rocky.y +
+           pland_mangrove.y + pland_wetland.y + pland_otherVeg.y + pland_salt.y) %>% 
+  glimpse -> tab_obj1
+
+# tab_obj1 %>% 
+#   filter(pland_nvc_17 == 100) %>% Change the filter limiar to get the number of landscapes with 10%...20%...30%...
+#   count() %>% 
+#   glimpse
+
+c(855, 562, 424, 318, 245, 169, 101, 55, 26, 0)-> nland_forest_06
+c(849, 549, 408, 301, 227, 160, 95, 54, 26, 0)-> nland_forest_17
+c(6058, 5748, 5313, 4806, 4244, 3621, 2886, 2003, 1051, 21)-> nland_nvc_06
+c(6053, 5752, 5329, 4850, 4337, 3697, 2967, 2128, 1093, 16)-> nland_nvc_17
+c(10, 20, 30, 40, 50, 60, 70, 80, 90, 100)-> perc_thresh
+as.data.frame(cbind(perc_thresh, nland_forest_06, nland_forest_17, nland_nvc_06, nland_nvc_17)) ->tab_nland
+
+ggplot()+
+  geom_point(data = tab_nland, aes(x = perc_thresh, y = nland_forest_17), color = "DarkGreen")+
+  geom_path(data = tab_nland, aes(x = perc_thresh, y = nland_forest_17),
+            linetype = "solid", color = "DarkGreen")+
+  geom_point(data = tab_nland, aes(x = perc_thresh, y = nland_nvc_17), color = "brown")+
+  geom_path(data = tab_nland, aes(x = perc_thresh, y = nland_nvc_17),
+            linetype = "solid", color = "brown")+
+  scale_x_continuous(breaks = perc_thresh)+
+  scale_y_continuous(breaks = c (1000, 2000, 3000, 4000, 5000, 6000))+
+  xlab("Land cover threshold (%)")+
+  ylab("Number of landscapes")+
+  theme_classic() -> fig.forest_nvc
+  
+ggsave(plot = fig.forest_nvc, filename = here("img/fig.forest_nvc.jpg"))  
+
+## fpp and nvc(forest) threshold----
+tab_obj1 %>% 
+  mutate(plot_id = as.character(plot_id)) %>% 
+  left_join(y = table_pop, by = c("plot_id" = "buff_id")) %>% 
+  glimpse ->tab_obj1
+
+
+
+for(i in perc_thresh){
+tab_obj1 %>% 
+  filter(pland_forest.x > i) %>% 
+  summarise(fpp = sum(pop_rural_WP_06)) %>% 
+    glimpse 
+} 
+c(914873.5, 620139.9, 452889.7,334987.9,  246105.2, 169683.1, 82448.42,40635.99, 25309.32, 0) -> fpp_forest_06
+
+for(i in perc_thresh){
+  tab_obj1 %>% 
+    filter(pland_forest.y > i) %>% 
+    summarise(fpp = sum(pop_rural_WP_17)) %>% 
+    glimpse 
+}
+c(1069881, 697544.4, 514603.4, 365129.7, 271340.4, 195505.4, 95731.14, 51285.22, 27593.96, 0) -> fpp_forest_17
+
+for(i in perc_thresh){
+  tab_obj1 %>% 
+    filter(pland_nvc_06 > i) %>% 
+    summarise(fpp = sum(pop_rural_WP_06)) %>% 
+    glimpse 
+}
+c(4906978, 4400750, 3810168, 3172125, 2585299, 2044387, 1461863, 876472, 335107.8, 8.438939) -> fpp_nvc_06
+
+for(i in perc_thresh){
+  tab_obj1 %>% 
+    filter(pland_nvc_17 > i) %>% 
+    summarise(fpp = sum(pop_rural_WP_17)) %>% 
+    glimpse 
+}
+c(5304623, 4793525, 4134340, 3482737, 2889928, 2294548, 1667838, 1063042, 398354.5, 48.79978) -> fpp_nvc_17
+
 ## pop and nvc change----
 ggplot(data = na.omit(tab_1), aes(x = vari_perc_nvc, y = vari_perc_pop_rural, color = cat_change))+
   geom_point()+
