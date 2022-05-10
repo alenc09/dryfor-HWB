@@ -88,7 +88,8 @@ buff_lsm_2006 %>%
          ca_otherTcrop = ca_41,
          ca_coffe = ca_46,
          ca_otherPcrop = ca_48
-         ) %>% 
+         ) #-> tab_forest_06
+%>% 
   mutate(
     plot_id = plot_id,
     pland_nvc_06 = pland_forest + pland_savanna + pland_grass + pland_rocky +
@@ -166,7 +167,8 @@ buff_lsm_2017 %>%
          ca_otherTcrop = ca_41,
          ca_coffe = ca_46,
          ca_otherPcrop = ca_48
-  ) %>%
+  ) # -> tab_forest_17
+%>%
   mutate(
     plot_id = plot_id,
     pland_nvc_17 = pland_forest + pland_savanna + pland_grass + pland_rocky +

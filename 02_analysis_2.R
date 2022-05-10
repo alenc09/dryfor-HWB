@@ -2,15 +2,17 @@
 #script para novas análises
 
 #library----
+library(here)
 library(dplyr)
 library(ggplot2)
+library(scales)
 library(sf)
-library(ggpubr)
+library(cowplot)
 
 #data----
 read.csv(file = here("tabela_geral.csv"))-> tab_1
 
-#análises exploratorias----
+#análises objetivo 1 ----
 ##forested landscapes----
 tab_forest_06 %>% 
   select(plot_id, pland_forest, pland_savanna, pland_grass, pland_rocky,
@@ -51,6 +53,7 @@ ggplot()+
 ggsave(plot = fig.forest_nvc, filename = here("img/fig.forest_nvc.jpg"))  
 
 ## fpp and nvc(forest) threshold----
+###data----
 tab_obj1 %>% 
   mutate(plot_id = as.character(plot_id)) %>% 
   left_join(y = table_pop, by = c("plot_id" = "buff_id")) %>% 
@@ -58,65 +61,222 @@ tab_obj1 %>%
 
 
 
-for(i in perc_thresh){
-tab_obj1 %>% 
-  filter(pland_forest.x > i) %>% 
-  summarise(fpp = sum(pop_rural_WP_06)) %>% 
-    glimpse 
-} 
+# for(i in perc_thresh){
+# tab_obj1 %>% 
+#   filter(pland_forest.x > i) %>% 
+#   summarise(fpp = sum(pop_rural_WP_06)) %>% 
+#     glimpse 
+# } 
 c(914873.5, 620139.9, 452889.7,334987.9,  246105.2, 169683.1, 82448.42,40635.99, 25309.32, 0) -> fpp_forest_06
 
-for(i in perc_thresh){
-  tab_obj1 %>% 
-    filter(pland_forest.y > i) %>% 
-    summarise(fpp = sum(pop_rural_WP_17)) %>% 
-    glimpse 
-}
+# for(i in perc_thresh){
+#   tab_obj1 %>% 
+#     filter(pland_forest.y > i) %>% 
+#     summarise(fpp = sum(pop_rural_WP_17)) %>% 
+#     glimpse 
+# }
 c(1069881, 697544.4, 514603.4, 365129.7, 271340.4, 195505.4, 95731.14, 51285.22, 27593.96, 0) -> fpp_forest_17
 
-for(i in perc_thresh){
-  tab_obj1 %>% 
-    filter(pland_nvc_06 > i) %>% 
-    summarise(fpp = sum(pop_rural_WP_06)) %>% 
-    glimpse 
-}
+# for(i in perc_thresh){
+#   tab_obj1 %>% 
+#     filter(pland_nvc_06 > i) %>% 
+#     summarise(fpp = sum(pop_rural_WP_06)) %>% 
+#     glimpse 
+# }
 c(4906978, 4400750, 3810168, 3172125, 2585299, 2044387, 1461863, 876472, 335107.8, 8.438939) -> fpp_nvc_06
 
-for(i in perc_thresh){
-  tab_obj1 %>% 
-    filter(pland_nvc_17 > i) %>% 
-    summarise(fpp = sum(pop_rural_WP_17)) %>% 
-    glimpse 
-}
+# for(i in perc_thresh){
+#   tab_obj1 %>% 
+#     filter(pland_nvc_17 > i) %>% 
+#     summarise(fpp = sum(pop_rural_WP_17)) %>% 
+#     glimpse 
+# }
 c(5304623, 4793525, 4134340, 3482737, 2889928, 2294548, 1667838, 1063042, 398354.5, 48.79978) -> fpp_nvc_17
+as.data.frame(cbind(perc_thresh,fpp_forest_06, fpp_forest_17, fpp_nvc_06, fpp_nvc_17))-> tab_fpp
+###gráficos----
+tab_fpp %>% 
+  ggplot()+
+  geom_point(aes(x = perc_thresh, y = fpp_forest_06), color = "DarkGreen")+
+  geom_path(x = perc_thresh, y = fpp_forest_06, color = "DarkGreen")+
+  geom_point(aes(x = perc_thresh, y = fpp_nvc_06), color = "brown")+
+  geom_path(x = perc_thresh, y = fpp_nvc_06, color = "brown")+
+  scale_x_continuous(breaks = perc_thresh)+
+  scale_y_continuous(limits = c(0, 6e+06), breaks = c(0, 1e+06, 2e+06, 3e+06, 4e+06, 5e+06, 6e+06), labels = label_number(scale = 1e-06))+
+  xlab("Land cover threshold (%)") + ylab("Number of FPP (Million)")+labs(title = "2006")+
+  theme_classic() -> fig.fpp_06
 
+tab_fpp %>% 
+  ggplot()+
+  geom_point(aes(x = perc_thresh, y = fpp_forest_17), color = "DarkGreen")+
+  geom_path(x = perc_thresh, y = fpp_forest_17, color = "DarkGreen")+
+  geom_point(aes(x = perc_thresh, y = fpp_nvc_17), color = "brown")+
+  geom_path(x = perc_thresh, y = fpp_nvc_17, color = "brown")+
+  scale_x_continuous(breaks = perc_thresh)+
+  scale_y_continuous(limits = c(0, 6e+06), breaks = c(0, 1e+06, 2e+06, 3e+06, 4e+06, 5e+06, 6e+06), labels = label_number(scale = 1e-06))+
+  xlab("Land cover threshold (%)") + ylab("Number of FPP (Million)")+labs(title = "2017")+
+  theme_classic() -> fig.fpp_17
+
+plot_grid(fig.fpp_06, fig.fpp_17) -> fig.fpp
+
+ggsave(plot = fig.fpp, filename = here("img/fig_fpp.jpg"))
+
+## population change----
+
+tab_1 %>%
+  group_by(code_muni) %>%
+  summarise(mean_pop_change = mean(vari_perc_pop_rural)) %>%
+  #glimpse
+  ggplot() +
+  geom_sf(aes(fill = mean_pop_change)) +
+  scale_fill_fermenter(
+    limits = c(-100, 100),
+    type = "div",
+    palette = "RdYlGn",
+    direction = 1,
+    breaks = c(-100, -75, -50, -25, 0, 25, 50, 75, 100),
+    name = "FPP change"
+  )+
+  theme(panel.background = element_blank())-> map_pop_change
+
+#Análises objetivo 2----
 ## pop and nvc change----
-ggplot(data = na.omit(tab_1), aes(x = vari_perc_nvc, y = vari_perc_pop_rural, color = cat_change))+
-  geom_point()+
-  ylim(-100,200)+
-  geom_hline(yintercept = 0)+
-  geom_vline(xintercept = 0)+
-  labs(title = "all buffers")+
-  scale_color_discrete(labels = c("Off-farm livelihoods",
-                                  "Land abandonment",
-                                  "small-holders settlement",
-                                  "Disposession"))+
+ggplot(data = na.omit(tab_1),
+       aes(x = vari_perc_nvc, y = vari_perc_pop_rural, color = cat_change)) +
+  geom_point() +
+  ylim(-100, 200) +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = 0) +
+  labs(title = "all buffers") +
+  scale_color_discrete(
+    labels = c(
+      "Off-farm livelihoods",
+      "Land abandonment",
+      "small-holders settlement",
+      "Disposession"
+    )
+  ) +
   theme_classic() -> pop_nvc_all
 
-tab_1 %>%  
-  filter(nvc_outlier == "outlier" & pop_outlier == "outlier") %>%
-ggplot(aes(x = vari_perc_nvc, y = vari_perc_pop_rural, color = cat_change))+
+# Q <- quantile(tab_1$vari_perc_nvc, probs=c(.25, .75), na.rm = TRUE)
+# iqr <- IQR(tab_1$vari_perc_nvc, na.rm = T)
+# up <-  Q[2]+1.5*iqr # Upper Range
+# low<- Q[1]-1.5*iqr # Lower Range
+
+quantile(tab_1$vari_perc_pop_rural, probs=c(.25, .75), na.rm = TRUE) -> Q_fpp
+IQR(tab_1$vari_perc_pop_rural, na.rm = T) -> iqr_fpp
+Q_fpp[2]+1.5*iqr_fpp -> up_fpp # Upper Range
+Q_fpp[1]-1.5*iqr_fpp -> low_fpp # Lower Range
+
+tab_1 %>% 
+select(buff_id, vari_perc_nvc, vari_perc_pop_rural, cat_change) %>% 
+  filter(vari_perc_nvc < up &
+           vari_perc_nvc > low &
+           vari_perc_pop_rural < up_fpp &
+           vari_perc_pop_rural > low_fpp) %>% 
+  glimpse -> tab_s_outlier
+
+mean(tab_s_outlier$vari_perc_nvc) + sd(tab_s_outlier$vari_perc_nvc)
+mean(tab_s_outlier$vari_perc_nvc) - sd(tab_s_outlier$vari_perc_nvc)
+mean(tab_s_outlier$vari_perc_pop_rural, na.rm=T) + sd(tab_s_outlier$vari_perc_pop_rural, na.rm=T)
+mean(tab_s_outlier$vari_perc_pop_rural, na.rm=T) - sd(tab_s_outlier$vari_perc_pop_rural, na.rm=T)
+
+tab_s_outlier %>%  
+  filter(vari_perc_nvc > 6.575527 |
+           vari_perc_nvc < -5.839117) %>% 
+  filter(vari_perc_pop_rural > 24.18684 |
+           vari_perc_pop_rural < -11.30523) %>%
+  ggplot(aes(x = vari_perc_nvc, y = vari_perc_pop_rural, color = cat_change))+
   geom_point()+
-  ylim(-100,200)+
+  #ylim(-100,200)+
   geom_hline(yintercept = 0)+
   geom_vline(xintercept = 0)+
-  labs(title = "'outliers'")+
+  labs(title = "beyond one SD")+
   scale_color_discrete(labels = c("Off-farm livelihoods",
                                   "Land abandonment",
                                   "small-holders settlement",
                                   "Disposession"))+
   theme_classic() -> pop_nvc_sd
 
+##Map of changes in fpp and forest cover----
+tab_1 %>%
+  group_by(code_muni) %>%
+  summarise(
+    mean_pop_change = mean(vari_perc_pop_rural),
+    mean_nvc_change = mean(vari_perc_nvc)
+  ) %>%
+  mutate(
+    cat_change = if_else(
+      condition = mean_nvc_change == 0 | mean_pop_change == 0,
+      true = "stable",
+      false = if_else(
+        condition = mean_nvc_change < 0 & mean_pop_change < 0,
+        true = "PP",
+        false = if_else(
+          condition =  mean_nvc_change < 0 & mean_pop_change > 0,
+          true = "PG",
+          false = if_else(
+            mean_nvc_change > 0 & mean_pop_change > 0,
+            true = "GG",
+            false = "GP"
+          )
+        )
+      )
+    )
+  ) %>%
+  #glimpse
+  filter(cat_change != "stable") %>%
+  ggplot() +
+  geom_sf(aes(fill = cat_change)) +
+  scale_fill_viridis_d(
+    labels = c(
+      "Off-farm livelihoods",
+      "Land abandonment",
+      "Small-holders settlement",
+      "Disposession"
+    )
+  )+
+  theme(legend.title = element_blank(),
+        panel.background = element_blank())-> map_category_change
+## censusing the categories----
+tab_1 %>%
+  group_by(code_muni) %>%
+  summarise(
+    mean_pop_change = mean(vari_perc_pop_rural),
+    mean_nvc_change = mean(vari_perc_nvc),
+    mean_nvc_2017 = mean(pland_nvc_17),
+    fpp_2017 = sum(pop_rural_WP_17)
+  ) %>%
+  mutate(
+    cat_change = if_else(
+      condition = mean_nvc_change > 0 & mean_pop_change > 0,
+      true = "GG",
+      false = if_else(
+        condition = mean_nvc_change > 0 & mean_pop_change < 0,
+        true = "GP",
+        false = if_else(
+          condition =  mean_nvc_change < 0 & mean_pop_change > 0,
+          true = "PG",
+          false = if_else(
+            mean_nvc_change < 0 & mean_pop_change < 0,
+            true = "PP",
+            false = "stable"
+          )
+        )
+      )
+    )
+  ) -> tab_census
+
+levels(as.factor(tab_census$cat_change))
+
+tab_census %>%
+  #mutate(code_muni = as.factor(code_muni)) %>% 
+  group_by(cat_change) %>% 
+  summarise(n_mun = length(code_muni),
+            fpp_2017 = sum(fpp_2017),
+            mean_pop_change = mean(mean_pop_change),
+            mean_nvc_2017 = mean(mean_nvc_2017),
+            mean_nvc_change = mean(mean_nvc_change)) %>% 
+  glimpse -> tab_cat_change
 
 ##family agriculture----
 tab_1 %>%  
@@ -326,8 +486,9 @@ tab_1 %>%
 
 ##maps----
 caat_mun %>%
-  select(code_muni, geom) %>% 
-  rename(geom_mun = geom) %>% 
+  select(GEOCODIG_M, geometry) %>% 
+  rename(code_muni = GEOCODIG_M) %>% 
+  mutate(code_muni = as.integer(code_muni)) %>% 
   left_join(y=tab_1) %>% 
   glimpse() ->tab_1
 
@@ -339,14 +500,7 @@ ggplot()+
   scale_fill_fermenter(type = "div", palette = "RdYlGn", direction = 1
                        ) -> map_nvc_change
 
-tab_1 %>% 
-  group_by(code_muni) %>% 
-  summarise(mean_pop_change = mean(vari_perc_pop_rural)) %>% 
-  #glimpse
-ggplot()+
-  geom_sf(aes(fill=mean_pop_change))+
-  scale_fill_fermenter(type = "div", palette = "RdYlGn", direction = 1
-                       ) -> map_pop_change
+
 
 tab_1 %>% 
   group_by(code_muni) %>% 
@@ -357,33 +511,7 @@ tab_1 %>%
   scale_fill_fermenter(type = "div", palette = "RdYlGn", direction = 1
                        ) -> map_agrifam_change
 
-tab_1 %>% 
-  group_by(code_muni) %>% 
-  summarise(mean_pop_change = mean(vari_perc_pop_rural),
-            mean_nvc_change = mean(vari_perc_nvc)) %>% 
-  mutate(cat_change = if_else(condition = mean_nvc_change==0 | mean_pop_change==0,
-                              true = "estable",
-                              false = if_else(condition = mean_nvc_change<0 & mean_pop_change<0,
-                                              true = "PP",
-                                              false = if_else(condition =  mean_nvc_change<0 & mean_pop_change>0,
-                                                              true = "PG",
-                                                              false = if_else(mean_nvc_change>0 & mean_pop_change>0,
-                                                                              true = "GG",
-                                                                              false = "GP"
-                                                                              )
-                                                              )
-                                              )
-                              )
-         ) %>%  
-  #glimpse
-  filter(cat_change != "estable") %>% 
-  ggplot()+
-  geom_sf(aes(fill=cat_change))+
-  #scale_fill_discrete()+
-  scale_fill_viridis_d(labels = c("Off-farm livelihoods",
-                                  "Land abandonment",
-                                  "small-holders settlement",
-                                  "Disposession"))-> map_category_change
+
 
 #export----
 ggarrange(map_nvc_change, map_pop_change, map_agrifam_change, map_category_change)
