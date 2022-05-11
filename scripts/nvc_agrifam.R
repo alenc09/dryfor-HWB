@@ -7,6 +7,7 @@ library(here)
 library(geobr)
 library(sf)
 library(units)
+library(ggplot2)
 library(cowplot)
 
 #Data----
@@ -38,6 +39,10 @@ tab_1 %>%
          perc_area_agrifam_17 = (agrifam_area_17/mun_area_ha)*100,
          vari_perc_area_agrifam = perc_area_agrifam_17 - perc_area_agrifam_06) %>% 
   glimpse -> tab_1
+
+tab_1 %>% 
+  dplyr::select(-geom) %>% 
+  write.csv(x = ., file = here("tabela_geral.csv"))
 
 #Figuras----
 ## exploratórias----
