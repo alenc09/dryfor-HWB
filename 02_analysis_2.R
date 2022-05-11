@@ -4,6 +4,7 @@
 #library----
 library(here)
 library(dplyr)
+library(tidyr)
 library(ggplot2)
 library(scales)
 library(sf)
@@ -11,8 +12,132 @@ library(cowplot)
 
 #data----
 read.csv(file = here("tabela_geral.csv"))-> tab_1
+read.csv(file = here("buff_lsm_2006.csv"), sep = ",", dec=".")-> buff_lsm_2006
+read.csv(file = here("buff_lsm_2017.csv"))-> buff_lsm_2017
 
 #análises objetivo 1 ----
+##data----
+buff_lsm_2006 %>% 
+  select(plot_id, metric, class, value) %>% 
+  filter(plot_id != 1606) %>% 
+  pivot_wider(id_cols = plot_id,
+              names_sep = "_",
+              names_from = c(metric, class),
+              values_from = value
+  ) %>% 
+  select(plot_id,shdi_NA, pland_3, pland_4, pland_5, pland_9, pland_11, pland_12, 
+         pland_13, pland_15, pland_20, pland_21, pland_23, pland_24, pland_25,
+         pland_29, pland_30, pland_31, pland_32, pland_33, pland_39, pland_41,
+         pland_46, pland_48, ca_3, ca_4, ca_5, ca_9, ca_11, ca_12, ca_13, ca_15,
+         ca_20, ca_21, ca_23, ca_24, ca_25, ca_29, ca_30, ca_31, ca_32, ca_33,
+         ca_39, ca_41, ca_46, ca_48) %>%
+  replace(is.na(.), 0) %>% 
+  rename(pland_forest = pland_3,
+         pland_savanna = pland_4,
+         pland_mangrove = pland_5,
+         pland_Fplantation = pland_9,
+         pland_wetland = pland_11,
+         pland_grass = pland_12,
+         pland_otherVeg = pland_13,
+         pland_pasture = pland_15,
+         pland_sugar = pland_20,
+         pland_mosaicAP = pland_21,
+         pland_sand = pland_23,
+         pland_urban = pland_24,
+         pland_otherNveg = pland_25,
+         pland_rocky = pland_29,
+         pland_mine = pland_30,
+         pland_aquacult = pland_31,
+         pland_salt = pland_32,
+         pland_water = pland_33,
+         pland_soy = pland_39,
+         pland_otherTcrop = pland_41,
+         pland_coffe = pland_46,
+         pland_otherPcrop = pland_48,
+         ca_forest = ca_3,
+         ca_savanna = ca_4,
+         ca_mangrove = ca_5,
+         ca_Fplantation = ca_9,
+         ca_wetland = ca_11,
+         ca_grass = ca_12,
+         ca_otherVeg = ca_13,
+         ca_pasture = ca_15,
+         ca_sugar = ca_20,
+         ca_mosaicAP = ca_21,
+         ca_sand = ca_23,
+         ca_urban = ca_24,
+         ca_otherNveg = ca_25,
+         ca_rocky = ca_29,
+         ca_mine = ca_30,
+         ca_aquacult = ca_31,
+         ca_salt = ca_32,
+         ca_water = ca_33,
+         ca_soy = ca_39,
+         ca_otherTcrop = ca_41,
+         ca_coffe = ca_46,
+         ca_otherPcrop = ca_48
+  ) -> tab_forest_06
+
+buff_lsm_2017 %>% 
+  select(plot_id, metric, class, value) %>% 
+  filter(plot_id != 1606) %>% 
+  pivot_wider(id_cols = plot_id,
+              names_sep = "_",
+              names_from = c(metric, class),
+              values_from = value) %>%
+  select(plot_id,shdi_NA, pland_3, pland_4, pland_5, pland_9, pland_11, pland_12, 
+         pland_13, pland_15, pland_20, pland_21, pland_23, pland_24, pland_25,
+         pland_29, pland_30, pland_31, pland_32, pland_33, pland_39, pland_41,
+         pland_46, pland_48, ca_3, ca_4, ca_5, ca_9, ca_11, ca_12, ca_13, ca_15,
+         ca_20, ca_21, ca_23, ca_24, ca_25, ca_29, ca_30, ca_31, ca_32, ca_33,
+         ca_39, ca_41, ca_46, ca_48) %>%
+  replace(is.na(.), 0) %>% 
+  rename(pland_forest = pland_3,
+         pland_savanna = pland_4,
+         pland_mangrove = pland_5,
+         pland_Fplantation = pland_9,
+         pland_wetland = pland_11,
+         pland_grass = pland_12,
+         pland_otherVeg = pland_13,
+         pland_pasture = pland_15,
+         pland_sugar = pland_20,
+         pland_mosaicAP = pland_21,
+         pland_sand = pland_23,
+         pland_urban = pland_24,
+         pland_otherNveg = pland_25,
+         pland_rocky = pland_29,
+         pland_mine = pland_30,
+         pland_aquacult = pland_31,
+         pland_salt = pland_32,
+         pland_water = pland_33,
+         pland_soy = pland_39,
+         pland_otherTcrop = pland_41,
+         pland_coffe = pland_46,
+         pland_otherPcrop = pland_48,
+         ca_forest = ca_3,
+         ca_savanna = ca_4,
+         ca_mangrove = ca_5,
+         ca_Fplantation = ca_9,
+         ca_wetland = ca_11,
+         ca_grass = ca_12,
+         ca_otherVeg = ca_13,
+         ca_pasture = ca_15,
+         ca_sugar = ca_20,
+         ca_mosaicAP = ca_21,
+         ca_sand = ca_23,
+         ca_urban = ca_24,
+         ca_otherNveg = ca_25,
+         ca_rocky = ca_29,
+         ca_mine = ca_30,
+         ca_aquacult = ca_31,
+         ca_salt = ca_32,
+         ca_water = ca_33,
+         ca_soy = ca_39,
+         ca_otherTcrop = ca_41,
+         ca_coffe = ca_46,
+         ca_otherPcrop = ca_48
+  )  -> tab_forest_17
+
 ##forested landscapes----
 tab_forest_06 %>% 
   select(plot_id, pland_forest, pland_savanna, pland_grass, pland_rocky,
@@ -54,6 +179,19 @@ ggsave(plot = fig.forest_nvc, filename = here("img/fig.forest_nvc.jpg"))
 
 ## fpp and nvc(forest) threshold----
 ###data----
+st_read(here("data/buff_5km_pop_rural_WP_2006.shp"))-> pop_rural_2006
+st_read(here("data/buff_5km_pop_rural_WP_2017.shp"))-> pop_rural_2017
+
+pop_rural_2006 %>% 
+  select(id_buff, popsum) %>% 
+  rename(buff_id = id_buff,
+         pop_rural_WP_06 = popsum,
+         geom_buff = geometry) %>% 
+  left_join(y = tibble(pop_rural_2017), by = c("buff_id" = "id_buff")) %>% 
+  select(buff_id, pop_rural_WP_06, pop_sum, geom_buff) %>% 
+  rename(pop_rural_WP_17 = pop_sum) %>% 
+  glimpse -> table_pop
+
 tab_obj1 %>% 
   mutate(plot_id = as.character(plot_id)) %>% 
   left_join(y = table_pop, by = c("plot_id" = "buff_id")) %>% 
@@ -93,6 +231,7 @@ c(4906978, 4400750, 3810168, 3172125, 2585299, 2044387, 1461863, 876472, 335107.
 # }
 c(5304623, 4793525, 4134340, 3482737, 2889928, 2294548, 1667838, 1063042, 398354.5, 48.79978) -> fpp_nvc_17
 as.data.frame(cbind(perc_thresh,fpp_forest_06, fpp_forest_17, fpp_nvc_06, fpp_nvc_17))-> tab_fpp
+
 ###gráficos----
 tab_fpp %>% 
   ggplot()+
@@ -157,10 +296,10 @@ ggplot(data = na.omit(tab_1),
   ) +
   theme_classic() -> pop_nvc_all
 
-# Q <- quantile(tab_1$vari_perc_nvc, probs=c(.25, .75), na.rm = TRUE)
-# iqr <- IQR(tab_1$vari_perc_nvc, na.rm = T)
-# up <-  Q[2]+1.5*iqr # Upper Range
-# low<- Q[1]-1.5*iqr # Lower Range
+ Q <- quantile(tab_1$vari_perc_nvc, probs=c(.25, .75), na.rm = TRUE)
+ iqr <- IQR(tab_1$vari_perc_nvc, na.rm = T)
+ up <-  Q[2]+1.5*iqr # Upper Range
+ low<- Q[1]-1.5*iqr # Lower Range
 
 quantile(tab_1$vari_perc_pop_rural, probs=c(.25, .75), na.rm = TRUE) -> Q_fpp
 IQR(tab_1$vari_perc_pop_rural, na.rm = T) -> iqr_fpp
