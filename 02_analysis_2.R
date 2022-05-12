@@ -375,7 +375,8 @@ tab_1 %>%
     )
   )+
   theme(legend.title = element_blank(),
-        panel.background = element_blank())-> map_category_change
+        panel.background = element_blank())#-> map_category_change
+
 ## censusing the categories----
 tab_1 %>%
   group_by(code_muni) %>%
