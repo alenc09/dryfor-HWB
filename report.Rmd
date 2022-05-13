@@ -14,6 +14,8 @@ output: html_document
 ```{r include=FALSE}
 library(knitr)
 library(here)
+library(dplyr)
+library(kableExtra)
 ```
 
 <br/>
@@ -70,6 +72,61 @@ include_graphics(here("img/map_category_change.jpg"))
 <br/>
 
 ### 2.4 censusing the number of municipalities, people and forest cover in each of these 4 kinds of municipality
+```{r include=FALSE}
+#data----
+read.csv(here("tabela_geral.csv"))-> tab_geral
+
+#análises----
+tab_geral %>%
+  group_by(code_muni) %>%
+  summarise(
+    mean_pop_change = mean(vari_perc_pop_rural),
+    mean_nvc_change = mean(vari_perc_nvc),
+    mean_nvc_2017 = mean(pland_nvc_17),
+    fpp_2017 = sum(pop_rural_WP_17)
+  ) %>%
+  mutate(
+    cat_change = if_else(
+      condition = mean_nvc_change > 0 & mean_pop_change > 0,
+      true = "GG",
+      false = if_else(
+        condition = mean_nvc_change > 0 & mean_pop_change < 0,
+        true = "GP",
+        false = if_else(
+          condition =  mean_nvc_change < 0 & mean_pop_change > 0,
+          true = "PG",
+          false = if_else(
+            mean_nvc_change < 0 & mean_pop_change < 0,
+            true = "PP",
+            false = "stable"
+          )
+        )
+      )
+    )
+  ) -> tab_census
+
+levels(as.factor(tab_census$cat_change))
+
+tab_census %>%
+  #mutate(code_muni = as.factor(code_muni)) %>% 
+  group_by(cat_change) %>% 
+  summarise(n_mun = length(code_muni),
+            fpp_2017 = sum(fpp_2017),
+            mean_pop_change = mean(mean_pop_change),
+            mean_nvc_2017 = mean(mean_nvc_2017),
+            mean_nvc_change = mean(mean_nvc_change)) %>% 
+  glimpse -> tab_cat_change
+```
+
+```{r}
+kable(tab_cat_change, digits = 2, col.names = c("Category of change",
+                                                "Number of unicipalities",
+                                                "FPP in 2017",
+                                                "Mean FPP change",
+                                                "Forest cover in 2017",
+                                                "Mean forest cover change")) %>% 
+  kable_classic()
+```
 
 <br/>
 
@@ -77,9 +134,9 @@ include_graphics(here("img/map_category_change.jpg"))
 
 ### 3.1 Can we see signs of land (in)equality at deforestation and reforestation frontiers?
 ```{r echo=FALSE}
-knitr::include_graphics("/home/alenc/Documents/Doutorado/tese/cap0/dryfor-HWB/img/agrifam_nvc.jpg")
-knitr::include_graphics("/home/alenc/Documents/Doutorado/tese/cap0/dryfor-HWB/img/agrifam_cat-change.jpg")
-knitr::include_graphics("/home/alenc/Documents/Doutorado/tese/cap0/dryfor-HWB/img/map_agrifam_change.jpg")
+include_graphics(here("img/fig.agrifam_nvc.jpg"))
+include_graphics(here("img/fig.agrifam_catChange.jpg"))
+include_graphics(here("img/map_agrifam.jpg"))
 ```
 
 <br/>
@@ -94,13 +151,13 @@ knitr::include_graphics("/home/alenc/Documents/Doutorado/tese/cap0/dryfor-HWB/im
 <br/>
 
 ### 3.4 what demographic changes are occuring within the Caatinga’s forest-proximate population?
-  Have no idea how to do this
+Usara dados de setor censitário
 
 <br/>
 
 ### 3.5. how is changes in population size associated with landscape (forest) heterogeneity?
 ```{r echo=FALSE}
-knitr::include_graphics("/home/alenc/Documents/Doutorado/tese/cap0/dryfor-HWB/img/shdi_pop_all.jpg")
+include_graphics(here("img/fig.shdi_fpp.jpg"))
 ```
 
 <br/>
@@ -116,21 +173,21 @@ knitr::include_graphics("/home/alenc/Documents/Doutorado/tese/cap0/dryfor-HWB/im
 
 ### 4.1 what is linkage between change in forest-proximate population and growth of local urban centre?
 ```{r echo=FALSE}
-knitr::include_graphics("/home/alenc/Documents/Doutorado/tese/cap0/dryfor-HWB/img/pop_rural_urb.jpg")
+include_graphics(here("img/fig.fpp_urbPop.jpg"))
 ```
 
 ### 4.2 what is linkage between land (in)equity and growth of local urban population?
 ```{r echo=FALSE}
-knitr::include_graphics("/home/alenc/Documents/Doutorado/tese/cap0/dryfor-HWB/img/agrifam_popUrb.jpg")
+include_graphics(here("img/fig.agrifam_urbPop.jpg"))
 ```
 
 ### 4.3 what is the relationship between urban proximity and change in the forest-proximate population?
 ```{r echo=FALSE}
-knitr::include_graphics("/home/alenc/Documents/Doutorado/tese/cap0/dryfor-HWB/img/popRural_dist.jpg")
+include_graphics(here("img/fig.fpp_dist.jpg"))
 ```
 
 ### 4.4 how does urban proximity influence patterns of re/deforestation?
 ```{r echo=FALSE}
-knitr::include_graphics("/home/alenc/Documents/Doutorado/tese/cap0/dryfor-HWB/img/nvc_change_dist.jpg")
+include_graphics(here("img/fig.nvc_dist.jpg"))
 ```
 
