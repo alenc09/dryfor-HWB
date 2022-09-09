@@ -14,28 +14,45 @@ read.csv(file = here("tabela_geral.csv"))-> tab_geral
 read_municipality(simplified = F)-> mun_br
 read_biomes() %>% 
   filter (name_biome == "Caatinga") -> caat_shp
+read_state() -> br_states
+
 
 sf_use_s2(FALSE) #função para desativar a checagem de vértices duplicados
 st_transform(x = mun_br, crs =5880) ->mun_br
 st_transform(x = caat_shp, crs = 5880) -> caat_shp
+st_transform(x = br_states, crs = 5880) -> br_states
 mun_br[caat_shp,] -> mun_caat
+br_states[caat_shp,] -> states_caat
+
 
 #map----
 tab_geral %>%
-  group_by(code_muni) %>%
+   group_by(code_muni) %>%
   summarise(mean_fpp_change = mean(vari_perc_pop_rural)) %>%
   right_join(y = mun_caat, by = "code_muni") %>%
-  glimpse %>% 
-ggplot() +
-  geom_sf(aes(geometry = geom, fill = mean_fpp_change)) +
-  scale_fill_fermenter(
-    limits = c(-100, 100),
-    type = "div",
-    palette = "RdYlGn",
-    direction = 1,
-    breaks = c(-100, -75, -50, -25, 0, 25, 50, 75, 100),
-    name = "FPP change"
-  )+
-  theme_map() -> map_fpp_change
+  glimpse -> tab_map
 
-ggsave(plot = map_fpp_change, filename = here("img/map.fpp_change.jpg"))
+st_as_sf(tab_map) %>% 
+  st_transform(crs=4674) ->tab_map
+
+tab_map %>% 
+ggplot() +
+  geom_sf(aes(geometry = geom, fill = mean_fpp_change), lwd = 0) +
+  scale_fill_fermenter(
+    palette = "BrBG",
+    direction = 1,
+    limits = c(-100, 100),
+    breaks = c(-75, -50, -25, -12.5, 0, 12.5, 25, 50, 75),
+    name = "FPP change",
+    label = c("-75","-50", "-25", "-12.5", "0","12.5","25", "50", "75"))+
+  geom_sf(data = states_caat[-1,], fill="transparent", lwd=0.1)+
+  coord_sf(xlim = c(-48, -34), ylim = c(-17.1, -3))+
+  geom_text(data = states_caat[-1,], aes(x= c(-42, -39.5,-36.5,-35.5, -34.5, -34.4, -36, -39,-42.4),
+                                y = c(-16.8, -15, -11, -10, -8.5, -7, -4.7, -2.9, -5),
+                                label = c("MG", "BA", "SE", "AL", "PE", "PB", "RN", "CE", "PI")),
+            size = 2)+
+  theme_map()+
+  theme(legend.text = element_text(size = 8),
+        legend.title = element_text(size = 10))-> map_fpp_change
+
+ggsave(plot = map_fpp_change, filename = here("img/map.fpp_change.png"), dpi = 600)
