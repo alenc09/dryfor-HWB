@@ -9,6 +9,15 @@ library(dplyr)
 read.csv(here("tabela_geral.csv"))-> tab_geral
 
 #análises----
+##Landscape scale----
+ tab_geral %>%
+  filter(pland_nvc_17 >= 20) %>% 
+  group_by(cat_change) %>% 
+  summarise(n_land = length(buff_id),
+            perc_land = n_land/(1967+1185+1734+846)) %>% 
+  glimpse
+
+## municipality scale----
 tab_geral %>%
   group_by(code_muni) %>%
   summarise(
