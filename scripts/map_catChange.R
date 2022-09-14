@@ -75,5 +75,18 @@ ggplot() +
   theme(legend.title = element_text(size = 10),
         legend.text = element_text(size = 8)) -> map_category_change
 
-ggsave(plot=map_category_change, filename = here("img/map_category_change.jpg"), dpi = 600)
+#map inset####
+#Inset map####
+ggplot()+
+  geom_sf(data = br, fill = "transparent")+
+  geom_sf(data = caat_shp, fill = "grey")+
+  geom_sf(data = br_states, fill = "transparent", lwd = 0.1)+
+  theme_map() -> inset_map
+
+ggdraw()+
+  draw_plot(map_category_change)+
+  draw_plot(inset_map,
+            x = -0.03, y = 0.6, width = 0.40, height = 0.40) -> map_category_change_inset
+
+ggsave(plot=map_category_change_inset, filename = here("img/map_category_change.png"), dpi = 600)
        
