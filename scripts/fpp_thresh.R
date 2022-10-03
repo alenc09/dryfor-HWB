@@ -194,7 +194,10 @@ tab_fpp %>%
   scale_x_continuous(breaks = perc_thresh)+
   scale_y_continuous(labels = c(0,1,2,3,4,5))+
   scale_color_manual(values = colors, name = "Year", labels = c("2006", "2017"))+
-  labs(x = "Land cover threshold (%)", y = "Number of FPP (million)", color = "Legend")+
-  theme_classic() -> fig.fpp
+  labs(x = "Forest cover threshold (%)", y = "Number of FPP (million)", color = "Legend")+
+  theme_classic()+
+  theme(legend.text = element_text(size = 8),
+        legend.title = element_text(size = 10),
+        legend.position = c(0.8,0.8)) -> fig.fpp
 
 ggsave(plot = fig.fpp, filename = "img/fig_fpp.jpg", dpi = 300)

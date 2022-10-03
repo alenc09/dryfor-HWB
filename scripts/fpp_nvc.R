@@ -17,7 +17,7 @@ tab_geral %>%
 ## figure with all landscapes----
 ggplot(data = na.omit(tab_geral)) +
   geom_point(aes(x = vari_perc_nvc, y = vari_perc_pop_rural,
-                 colour = cat_change), alpha = 0.3, stroke = 0, size = 2.5) +
+                 colour = cat_change), alpha = 0.3, stroke = 0, size = 2) +
   ylim(-100, 200) +
   geom_hline(yintercept = 0) +
   geom_vline(xintercept = 0) +
