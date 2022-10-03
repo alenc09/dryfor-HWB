@@ -65,7 +65,7 @@ ggplot() +
     values = c("#018571", "#80cdc1", "#dfc27d", "#a6611a"),
     name = "Forest-People",
     label = c("gain-gain", "gain-lose", "lose-gain", "lose-lose"))+
-  geom_sf(data = states_caat[-1,], fill="transparent", lwd=0.1)+
+  geom_sf(data = states_caat[-1,], fill="transparent", lwd=0.2)+
   coord_sf(xlim = c(-48, -34), ylim = c(-17.1, -3))+
   geom_text(data = states_caat[-1,], aes(x= c(-42, -39.5,-36.5,-35.5, -34.5, -34.4, -36, -39,-42.4),
                                          y = c(-16.8, -15, -11, -10, -8.5, -7, -4.7, -2.9, -5),
@@ -73,7 +73,8 @@ ggplot() +
             size = 2)+
   theme_map()+
   theme(legend.title = element_text(size = 10),
-        legend.text = element_text(size = 8)) -> map_category_change
+        legend.text = element_text(size = 8),
+        legend.position = c(0.8, 0.2)) -> map_category_change
 
 #map inset####
 #Inset map####
@@ -86,7 +87,7 @@ ggplot()+
 ggdraw()+
   draw_plot(map_category_change)+
   draw_plot(inset_map,
-            x = -0.03, y = 0.6, width = 0.40, height = 0.40) -> map_category_change_inset
+            x = 0.03, y = 0.6, width = 0.40, height = 0.40) -> map_category_change_inset
 
 ggsave(plot=map_category_change_inset, filename = here("img/map_category_change.png"), dpi = 600)
        

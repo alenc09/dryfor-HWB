@@ -27,7 +27,8 @@ ggplot(data = na.omit(tab_geral)) +
   scale_color_manual(values = c("#018571", "#80cdc1", "#dfc27d", "#a6611a"),
                      label = c("gain-gain", "gain-lose", "lose-gain", "lose-lose"))+
   theme_classic()+
-  theme(legend.title = element_blank())-> pop_nvc_all
+  theme(legend.title = element_blank(),
+        panel.background = element_rect(color = "white"))-> pop_nvc_all
 
 ##Figure without outliers and landscapes above on SD----
 Q <- quantile(tab_geral$vari_perc_nvc, probs=c(.25, .75), na.rm = TRUE)
@@ -68,7 +69,9 @@ tab_s_outlier %>%
   xlab("Variation in native vegetation cover (%)") +
   ylab("Variation in FPP (%)")+
   theme_classic()+
-  theme(legend.title = element_blank()) -> pop_nvc_sd
+  theme(legend.title = element_blank(),
+        panel.background = element_rect(color = "white")) -> pop_nvc_sd
 
 ggarrange(pop_nvc_all, pop_nvc_sd, common.legend = T, legend = "bottom") %>% 
-  ggsave(plot = ., filename = here("img/fig.fpp_nvc.jpg"), dpi = 600)
+  # ggpubr:::bgcolor("White") %>% 
+  ggsave(plot = ., filename = here("img/fig.fpp_nvc.png"), dpi = 300)

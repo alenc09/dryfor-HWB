@@ -53,7 +53,8 @@ ggplot() +
             size = 2)+
   theme_map()+
   theme(legend.text = element_text(size = 8),
-        legend.title = element_text(size = 10))-> map_fpp_change
+        legend.title = element_text(size = 10),
+        legend.position = c(0.8, 0.2))-> map_fpp_change
 
 #Inset map####
 ggplot()+
@@ -65,6 +66,6 @@ ggplot()+
 ggdraw()+
   draw_plot(map_fpp_change)+
   draw_plot(inset_map,
-            x = -0.03, y = 0.6, width = 0.40, height = 0.40) -> map_fpp_change_inset
+            x = 0.03, y = 0.6, width = 0.40, height = 0.40) -> map_fpp_change_inset
 
 ggsave(plot = map_fpp_change_inset, filename = here("img/map.fpp_change.png"), dpi = 600)
