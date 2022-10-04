@@ -201,3 +201,10 @@ tab_fpp %>%
         legend.position = c(0.8,0.8)) -> fig.fpp
 
 ggsave(plot = fig.fpp, filename = "img/fig_fpp.jpg", dpi = 300)
+
+##% of decrease for each threshold----
+tab_fpp %>%
+mutate(change_fpp = (100-(fpp_17[10]/fpp_17[1])*100)/10) %>% 
+  glimpse
+
+  

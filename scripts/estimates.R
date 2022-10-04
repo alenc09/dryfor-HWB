@@ -11,13 +11,14 @@ read.csv(file = here("tabela_geral.csv"))-> tab_geral
 #cáculos----
 ##n de paisagens
 tab_geral %>% 
+  rename(buff_id = X) %>% 
   filter(pland_nvc_06 >= 20) %>% 
   summarise(n_paisagens = n_distinct(buff_id)) %>% 
   glimpse
 
 ##number of FPP----
 tab_geral %>% 
-  filter(pland_nvc_06 >= 20) %>% 
+  filter(pland_nvc_06 >= 10) %>% 
   summarise(fpp_06 = sum(pop_rural_WP_06),
             fpp_17 = sum(pop_rural_WP_17)) %>% 
   glimpse ->fpp_buffs
@@ -47,4 +48,10 @@ tab_geral %>%
   summarise(n = n(),
             mean_perc_change_fpp = mean(vari_perc_pop_rural, na.rm = T),
             mean_perc_change_nvc = mean(vari_perc_nvc, na.rm=T)) %>% 
+  glimpse
+
+##Percentage of landscapes in each category----
+tab_geral %>% 
+  filter(pland_nvc_06 >= 20, 
+         vari_perc_pop_rural > 0) %>% 
   glimpse

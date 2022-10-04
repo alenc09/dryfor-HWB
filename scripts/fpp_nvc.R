@@ -72,6 +72,16 @@ tab_s_outlier %>%
   theme(legend.title = element_blank(),
         panel.background = element_rect(color = "white")) -> pop_nvc_sd
 
-ggarrange(pop_nvc_all, pop_nvc_sd, common.legend = T, legend = "bottom") %>% 
+#ggarrange(pop_nvc_all, pop_nvc_sd, common.legend = T, legend = "bottom") %>% 
   # ggpubr:::bgcolor("White") %>% 
-  ggsave(plot = ., filename = here("img/fig.fpp_nvc.png"), dpi = 300)
+#  ggsave(plot = ., filename = here("img/fig.fpp_nvc.png"), dpi = 300)
+
+##counting outliers----
+tab_s_outlier %>%  
+  filter(vari_perc_nvc > 6.575527 |
+           vari_perc_nvc < -5.839117) %>% 
+  filter(vari_perc_pop_rural > 24.18684 |
+           vari_perc_pop_rural < -11.30523) %>% 
+  group_by(cat_change) %>% 
+  summarise(n_land = n()) %>% 
+  glimpse
