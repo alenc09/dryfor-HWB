@@ -6,6 +6,7 @@ library(dplyr)
 library(tidyr)
 library(sf)
 library(ggplot2)
+library(cowplot)
 
 #data----
 #load files----
@@ -159,7 +160,7 @@ tab_obj1 %>%
   left_join(y = table_pop, by = c("plot_id" = "buff_id")) %>% 
   glimpse ->tab_obj1
 
-##table for figure----
+##cumulative threshold----
 seq(from = 10, to = 100, by = 10) -> perc_thresh
 
 c() -> list_fpp06
@@ -188,7 +189,39 @@ list_fpp17 %>%
 
 as.data.frame(cbind(perc_thresh, fpp_06, fpp_17))-> tab_fpp
 
-#Figure----
+##change per threshold----
+seq(from = 10, to = 90, by = 10)->  perc_thresh2
+
+c() -> list_fpp06_change
+for(i in perc_thresh2){
+  tab_obj1 %>%
+    filter(pland_nvc_06 >= i & pland_nvc_06 < i+10) %>%
+    summarise(fpp = sum(pop_rural_WP_06)) %>%
+    glimpse -> list_fpp06_change[i]
+} 
+list_fpp06_change %>% 
+  unlist %>% 
+  glimpse -> fpp06_change
+
+c() -> list_fpp17_change
+for(i in perc_thresh2){
+  tab_obj1 %>%
+    filter(pland_nvc_17 >= i & pland_nvc_17 < i+10) %>%
+    summarise(fpp = sum(pop_rural_WP_17)) %>%
+    glimpse -> list_fpp17_change[i]
+} 
+list_fpp17_change %>% 
+  unlist %>% 
+  glimpse -> fpp17_change
+
+c("10-20","20-30", "30-40", "40-50", "50-60", "60-70", "70-80", "80-90", "90-100") -> cat_forest
+as.data.frame(cbind(cat_forest, fpp06_change, fpp17_change)) %>% 
+  mutate(across(.cols = 2:3, .fns = as.numeric),
+         fpp_cat_change = fpp17_change - fpp06_change) %>% 
+  glimpse -> tab_fpp_change
+
+#Figures----
+## Cumulative curve----
 tab_fpp %>% 
   ggplot(aes(x = perc_thresh))+
   geom_point(aes(y = fpp_06, color = "fpp_06"))+
@@ -206,9 +239,17 @@ tab_fpp %>%
 
 #ggsave(plot = fig.fpp, filename = "img/fig_fpp.jpg", dpi = 300)
 
-##% of decrease for each threshold----
-tab_fpp %>%
-mutate(change_fpp = (100-(fpp_17[10]/fpp_17[1])*100)/10) %>% 
-  glimpse
+## changes per category of forest cover ---- 
+tab_fpp_change %>% 
+  ggplot() +
+  geom_col(aes(x = cat_forest, y= fpp_cat_change, fill = fpp_cat_change > 0))+
+  scale_fill_manual(values = c("#a6611a", "#018571"), labels = c("Lose", "Gain"), name = "FPP change")+
+  geom_hline(yintercept = 0, color = "black", linewidth = 0.2)+
+  labs(x = " Forest cover interval (%)", y = "Absolute change")+
+  theme(axis.line.y = element_line(color = "black"),
+        panel.background = element_blank()) -> fig.fpp_cat_change
 
-  
+## panel fpp change----
+plot_grid(fig.fpp, fig.fpp_cat_change)-> fig.fpp_change
+
+ggsave(plot = fig.fpp_change, filename = here("img/fig.fpp_change.jpg"), width = 12)
