@@ -7,6 +7,7 @@ library(tidyr)
 library(sf)
 library(ggplot2)
 library(cowplot)
+library(scales)
 
 #data----
 #load files----
@@ -190,66 +191,51 @@ list_fpp17 %>%
 as.data.frame(cbind(perc_thresh, fpp_06, fpp_17))-> tab_fpp
 
 ##change per threshold----
-seq(from = 10, to = 90, by = 10)->  perc_thresh2
-
-c() -> list_fpp06_change
-for(i in perc_thresh2){
-  tab_obj1 %>%
-    filter(pland_nvc_06 >= i & pland_nvc_06 < i+10) %>%
-    summarise(fpp = sum(pop_rural_WP_06)) %>%
-    glimpse -> list_fpp06_change[i]
-} 
-list_fpp06_change %>% 
-  unlist %>% 
-  glimpse -> fpp06_change
-
-c() -> list_fpp17_change
-for(i in perc_thresh2){
-  tab_obj1 %>%
-    filter(pland_nvc_17 >= i & pland_nvc_17 < i+10) %>%
-    summarise(fpp = sum(pop_rural_WP_17)) %>%
-    glimpse -> list_fpp17_change[i]
-} 
-list_fpp17_change %>% 
-  unlist %>% 
-  glimpse -> fpp17_change
-
-c("10-20","20-30", "30-40", "40-50", "50-60", "60-70", "70-80", "80-90", "90-100") -> cat_forest
-as.data.frame(cbind(cat_forest, fpp06_change, fpp17_change)) %>% 
-  mutate(across(.cols = 2:3, .fns = as.numeric),
-         fpp_cat_change = fpp17_change - fpp06_change) %>% 
+tab_fpp %>% 
+  mutate(fpp_change = fpp_17 - fpp_06) %>% 
   glimpse -> tab_fpp_change
 
 #Figures----
 ## Cumulative curve----
 tab_fpp %>% 
   ggplot(aes(x = perc_thresh))+
+  geom_segment(aes(x = 0, xend = 20, y = 881400, yend = 881400), linetype = "dashed", color = "lightgrey")+
+  geom_segment(aes(x = 20, xend = 20, y = 0, yend = 881400), linetype = "dashed", color = "lightgrey")+
+  geom_segment(aes(x = 0, xend = 50, y = 2830176, yend = 2830176), linetype = "dashed", color = "lightgrey")+
+  geom_segment(aes(x = 50, xend = 50, y = 0, yend = 2830176), linetype = "dashed", color = "lightgrey")+
+  geom_segment(aes(x = 0, xend = 70, y = 4026815, yend = 4026815), linetype = "dashed", color = "lightgrey")+
+  geom_segment(aes(x = 70, xend = 70, y = 0, yend = 4026815), linetype = "dashed", color = "lightgrey")+
   geom_point(aes(y = fpp_06, color = "fpp_06"))+
   geom_line(aes(y = fpp_06,color = "fpp_06"))+
   geom_point(aes(y = fpp_17, color = "fpp_17"))+
   geom_line(aes(y = fpp_17, color = "fpp_17"))+
-  scale_x_continuous(breaks = perc_thresh)+
-  scale_y_continuous(labels = c(0,1,2,3,4,5,6))+
-  scale_color_manual(values = c("#ffa600", "#5c3811"), name = "Year", labels = c("2006", "2017"))+
+  scale_x_continuous(breaks = perc_thresh, expand = c(0, 0))+
+  scale_y_continuous(labels = c(0,0.8,1,2,2.8,3,4,5,6),
+                     breaks = c(0, 881400, 1000000, 2000000, 2830176, 3000000, 4026815, 5000000, 6000000),
+                     expand = c(0, 0))+
+ scale_color_manual(values = c("#ffa600", "#5c3811"), name = "Year", labels = c("2006", "2017"))+
   labs(x = "Forest cover threshold (%)", y = "Number of FPP (million)", color = "Legend")+
   theme_classic()+
   theme(legend.text = element_text(size = 8),
         legend.title = element_text(size = 10),
-        legend.position = c(0.9,0.6)) -> fig.fpp
+        legend.position = c(0.9,0.6))  -> fig.fpp
 
 #ggsave(plot = fig.fpp, filename = "img/fig_fpp.jpg", dpi = 300)
 
 ## changes per category of forest cover ---- 
+options(scipen=10000)
 tab_fpp_change %>% 
-  ggplot() +
-  geom_col(aes(x = cat_forest, y= fpp_cat_change, fill = fpp_cat_change > 0))+
-  scale_fill_manual(values = c("#a6611a", "#018571"), labels = c("Lose", "Gain"), name = "FPP change")+
-  geom_hline(yintercept = 0, color = "black", linewidth = 0.2)+
-  labs(x = " Forest cover interval (%)", y = "Absolute change")+
-  theme(axis.line.y = element_line(color = "black"),
-        panel.background = element_blank()) -> fig.fpp_cat_change
+  ggplot(aes(x = as.factor(perc_thresh), y = fpp_change)) +
+  geom_bar(stat = "identity", fill = "#018571")+
+  scale_y_continuous(labels = comma, expand = c(0, 0),
+                     breaks = c(72272, 100000, 144741, 200000, 224852, 300000, 400000))+
+  geom_segment(aes(x = 0, xend = 2, y = 72272, yend = 72272), linetype = "dashed", color = "lightgrey")+
+  geom_segment(aes(x = 0, xend = 5, y = 144741, yend = 144741), linetype = "dashed", color = "lightgrey")+
+  geom_segment(aes(x = 0, xend = 7, y = 224852, yend = 224852), linetype = "dashed", color = "lightgrey")+
+  labs(x = " Forest cover threshold (%)", y = "Absolute change")+
+  theme_classic() -> fig.fpp_cat_change
 
 ## panel fpp change----
-plot_grid(fig.fpp, fig.fpp_cat_change)-> fig.fpp_change
+plot_grid(fig.fpp, fig.fpp_cat_change) -> fig.fpp_change
 
 ggsave(plot = fig.fpp_change, filename = here("img/fig.fpp_change.jpg"), width = 12)
