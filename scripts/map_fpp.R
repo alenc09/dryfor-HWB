@@ -10,7 +10,7 @@ library(ggplot2)
 library(cowplot)
 
 #data----
-read.csv(file = here("tabela_geral.csv"))-> tab_geral
+read.csv(file = here("data/tabela_geral.csv"))-> tab_geral
 read_municipality(simplified = F)-> mun_br
 read_biomes() %>% 
   filter (name_biome == "Caatinga") -> caat_shp
@@ -37,15 +37,16 @@ st_as_sf(tab_map) %>%
 
 tab_map %>% 
 ggplot() +
-  geom_sf(aes(geometry = geom, fill = mean_fpp_change), lwd = 0) +
+  geom_sf(aes(geometry = geom, fill = mean_fpp_change), linewidth = 0.2, color = "grey") +
   scale_fill_fermenter(
     palette = "BrBG",
     direction = 1,
     limits = c(-100, 100),
     breaks = c(-75, -50, -25, -12.5, 0, 12.5, 25, 50, 75),
     name = "FPP change (%)",
-    label = c("-75","-50", "-25", "-12.5", "0","12.5","25", "50", "75"))+
-  geom_sf(data = states_caat[-1,], fill="transparent", lwd=0.2)+
+    label = c("-75","-50", "-25", "-12.5", "0","12.5","25", "50", "75"),
+    na.value = "grey90")+
+  geom_sf(data = states_caat[-1,], fill="transparent", linewidth=0.3)+
   coord_sf(xlim = c(-48, -34), ylim = c(-17.1, -3))+
   geom_text(data = states_caat[-1,], aes(x= c(-42, -39.5,-36.5,-35.5, -34.5, -34.4, -36, -39,-42.4),
                                 y = c(-16.8, -15, -11, -10, -8.5, -7, -4.7, -2.9, -5),
@@ -59,13 +60,15 @@ ggplot() +
 #Inset map####
 ggplot()+
   geom_sf(data = br, fill = "transparent")+
-  geom_sf(data = caat_shp, fill = "grey")+
+  geom_sf(data = tab_map, aes(geometry = geom), linewidth = 0, fill = "darkgrey")+
   geom_sf(data = br_states, fill = "transparent", lwd = 0.1)+
   theme_map() -> inset_map
   
 ggdraw()+
   draw_plot(map_fpp_change)+
   draw_plot(inset_map,
-            x = 0.03, y = 0.6, width = 0.40, height = 0.40) -> map_fpp_change_inset
+            x = 0.01, y = 0.6, width = 0.40, height = 0.40)-> map_fpp_change_inset
 
-ggsave(plot = map_fpp_change_inset, filename = here("img/map.fpp_change.png"), dpi = 600)
+# ggsave(plot = map_fpp_change_inset, filename = here("img/map.fpp_change.jpg"),
+#        dpi = 300,
+#        bg = "white")

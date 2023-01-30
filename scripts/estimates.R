@@ -4,9 +4,11 @@
 #library----
 library(here)
 library(dplyr)
-library(streamgraph)
 library(ggplot2)
 library(tidyr)
+library(ggbump)
+library(scales)
+library(ggpubr)
 
 #data----
 read.csv(file = here("data/tabela_geral.csv"))-> tab_geral
@@ -216,7 +218,7 @@ tab_geral %>%
 list()-> list_fpp_dens
 for(i in seq(0,90,10)){
   tab_fpp_state %>% 
-    filter (pland_nvc_17 >= i+10) %>% 
+    filter (pland_nvc_17 <= i+10) %>% 
   group_by(code_uf) %>% 
   summarise(n_buff = n(),
             area_buffs = n_buff * 78.539816,
@@ -238,23 +240,23 @@ list_fpp_dens[[90]]-> fpp_dens_90
 list_fpp_dens[[100]]-> fpp_dens_100
 
 fpp_dens_10 %>% 
-  left_join(select(fpp_dens_20, code_uf, fpp_dens), by = "code_uf") %>% 
+  full_join(select(fpp_dens_20, code_uf, fpp_dens), by = "code_uf") %>% 
   rename(fpp_dens_10 = fpp_dens.x, fpp_dens_20 = fpp_dens.y) %>% 
-  left_join(select(fpp_dens_30, code_uf, fpp_dens), by = "code_uf") %>% 
+  full_join(select(fpp_dens_30, code_uf, fpp_dens), by = "code_uf") %>% 
   rename(fpp_dens_30 = fpp_dens) %>% 
-  left_join(select(fpp_dens_40, code_uf, fpp_dens), by = "code_uf") %>% 
+  full_join(select(fpp_dens_40, code_uf, fpp_dens), by = "code_uf") %>% 
   rename(fpp_dens_40 = fpp_dens) %>% 
-  left_join(select(fpp_dens_50, code_uf, fpp_dens), by = "code_uf") %>% 
+  full_join(select(fpp_dens_50, code_uf, fpp_dens), by = "code_uf") %>% 
   rename(fpp_dens_50 = fpp_dens) %>% 
-  left_join(select(fpp_dens_60, code_uf, fpp_dens), by = "code_uf") %>% 
+  full_join(select(fpp_dens_60, code_uf, fpp_dens), by = "code_uf") %>% 
   rename(fpp_dens_60 = fpp_dens) %>% 
-  left_join(select(fpp_dens_70, code_uf, fpp_dens), by = "code_uf") %>% 
+  full_join(select(fpp_dens_70, code_uf, fpp_dens), by = "code_uf") %>% 
   rename(fpp_dens_70 = fpp_dens) %>%
-  left_join(select(fpp_dens_80, code_uf, fpp_dens), by = "code_uf") %>% 
+  full_join(select(fpp_dens_80, code_uf, fpp_dens), by = "code_uf") %>% 
   rename(fpp_dens_80 = fpp_dens) %>% 
-  left_join(select(fpp_dens_90, code_uf, fpp_dens), by = "code_uf") %>% 
+  full_join(select(fpp_dens_90, code_uf, fpp_dens), by = "code_uf") %>% 
   rename(fpp_dens_90 = fpp_dens) %>% 
-  left_join(select(fpp_dens_100, code_uf, fpp_dens), by = "code_uf") %>% 
+  full_join(select(fpp_dens_100, code_uf, fpp_dens), by = "code_uf") %>% 
   rename(fpp_dens_100 = fpp_dens) %>% 
   glimpse -> fpp_dens_all
 
@@ -267,9 +269,95 @@ fpp_dens_all[-10,]%>%
 
 fpp_dens_all_long %>%
   ggplot()+
-  geom_line(aes(x = nvc_thresh, y = fpp_dens, color = code_uf))+
+  geom_bump(aes(x = nvc_thresh, y = fpp_dens, color = code_uf))+
+  geom_segment(aes(x = 0, xend = 20, y = 35.393077, yend = 35.393077), linetype = "dashed", color = "lightgrey")+
+  geom_segment(aes(x = 20, xend = 20, y = 0, yend = 35.393077), linetype = "dashed", color = "lightgrey")+
+  geom_segment(aes(x = 0, xend = 50, y = 38.675893, yend = 38.675893), linetype = "dashed", color = "lightgrey")+
+  geom_segment(aes(x = 50, xend = 50, y = 0, yend = 38.675893), linetype = "dashed", color = "lightgrey")+
+  geom_segment(aes(x = 0, xend = 70, y = 37.193919, yend = 37.193919), linetype = "dashed", color = "lightgrey")+
+  geom_segment(aes(x = 70, xend = 70, y = 0, yend = 37.193919), linetype = "dashed", color = "lightgrey")+
   labs(x = "Forest cover threshold (%)", y = "FPP density (n/km²)")+
+  scale_x_continuous(breaks = c(0, 10,20,30,40,50,60,70,80,90,100), expand = c(0,0))+
+  scale_y_continuous(breaks = c(0, 10, 20, 30, 35.393077, 37.193919, 38.675893, 40),
+                     labels = c(0, 10, 20, 30, 35.3, 37.1, 38.6, 40),
+                     expand = c(0,0))+
   scale_color_discrete(labels = c("Piauí", "Ceará", "Rio Grande do Norte",
                                   "Paraíba", "Pernambuco", "Alagoas", "Sergipe",
-                                  "Bahia", "Minas Gerais"), name = "Estado")+
-  theme_classic()
+                                  "Bahia", "Minas Gerais"), name = "State")+
+  theme_classic()->fpp_dens_state
+
+###Cumulative population total----
+list()-> list_fpp_total
+for(i in seq(0,90,10)){
+  tab_fpp_state %>% 
+    filter (pland_nvc_17 <= i+10) %>% 
+  group_by(code_uf) %>% 
+  summarise(fpp_total = sum(pop_rural_WP_17)) %>% 
+  glimpse -> list_fpp_total[[i+10]]
+}
+
+list_fpp_total[[10]]-> fpp_total_10
+list_fpp_total[[20]]-> fpp_total_20
+list_fpp_total[[30]]-> fpp_total_30
+list_fpp_total[[40]]-> fpp_total_40
+list_fpp_total[[40]]-> fpp_total_40
+list_fpp_total[[50]]-> fpp_total_50
+list_fpp_total[[60]]-> fpp_total_60
+list_fpp_total[[70]]-> fpp_total_70
+list_fpp_total[[80]]-> fpp_total_80
+list_fpp_total[[90]]-> fpp_total_90
+list_fpp_total[[100]]-> fpp_total_100
+
+fpp_total_10 %>% 
+  full_join(select(fpp_total_20, code_uf, fpp_total), by = "code_uf") %>% 
+  rename(fpp_total_10 = fpp_total.x, fpp_total_20 = fpp_total.y) %>% 
+  full_join(select(fpp_total_30, code_uf, fpp_total), by = "code_uf") %>% 
+  rename(fpp_total_30 = fpp_total) %>% 
+  full_join(select(fpp_total_40, code_uf, fpp_total), by = "code_uf") %>% 
+  rename(fpp_total_40 = fpp_total) %>% 
+  full_join(select(fpp_total_50, code_uf, fpp_total), by = "code_uf") %>% 
+  rename(fpp_total_50 = fpp_total) %>% 
+  full_join(select(fpp_total_60, code_uf, fpp_total), by = "code_uf") %>% 
+  rename(fpp_total_60 = fpp_total) %>% 
+  full_join(select(fpp_total_70, code_uf, fpp_total), by = "code_uf") %>% 
+  rename(fpp_total_70 = fpp_total) %>%
+  full_join(select(fpp_total_80, code_uf, fpp_total), by = "code_uf") %>% 
+  rename(fpp_total_80 = fpp_total) %>% 
+  full_join(select(fpp_total_90, code_uf, fpp_total), by = "code_uf") %>% 
+  rename(fpp_total_90 = fpp_total) %>% 
+  full_join(select(fpp_total_100, code_uf, fpp_total), by = "code_uf") %>% 
+  rename(fpp_total_100 = fpp_total) %>% 
+  glimpse -> fpp_total_all
+
+
+fpp_total_all[-10,]%>% 
+  replace(is.na(.), 0) %>%
+  pivot_longer(cols = 2:11, names_prefix = "fpp_total_", names_to = "nvc_thresh", values_to = "fpp_total") %>%
+  mutate(nvc_thresh = as.numeric(nvc_thresh),
+         code_uf = as.factor(code_uf))%>%
+  glimpse -> fpp_total_all_long
+
+fpp_total_all_long %>%
+  ggplot()+
+  geom_bump(aes(x = nvc_thresh, y = fpp_total, color = code_uf))+
+  geom_segment(aes(x = 0, xend = 20, y = 258196.567, yend = 258196.567), linetype = "dashed", color = "lightgrey")+
+  geom_segment(aes(x = 20, xend = 20, y = 0, yend = 258196.567), linetype = "dashed", color = "lightgrey")+
+  geom_segment(aes(x = 0, xend = 50, y = 936495.780, yend = 936495.780), linetype = "dashed", color = "lightgrey")+
+  geom_segment(aes(x = 50, xend = 50, y = 0, yend = 936495.780), linetype = "dashed", color = "lightgrey")+
+  geom_segment(aes(x = 0, xend = 70, y = 1225985.470, yend = 1225985.470), linetype = "dashed", color = "lightgrey")+
+  geom_segment(aes(x = 70, xend = 70, y = 0, yend = 1225985.470), linetype = "dashed", color = "lightgrey")+
+  labs(x = "Forest cover threshold (%)", y = "Number of FPP")+
+  scale_x_continuous(breaks = c(0, 10, 20,30,40,50,60,70,80,90,100), expand = c(0,0))+
+  scale_y_continuous(breaks = c(0, 258196.567, 500000, 936495.780, 1000000,1225985.470, 1500000),
+                     labels = comma,
+                     expand = c(0,0))+
+  scale_color_discrete(labels = c("Piauí", "Ceará", "Rio Grande do Norte",
+                                  "Paraíba", "Pernambuco", "Alagoas", "Sergipe",
+                                  "Bahia", "Minas Gerais"), name = "State")+
+  theme_classic() +
+  theme(plot.margin = unit(c(1,1,1,1), units = ) )-> fpp_total_state
+
+##Figure fpp per state----
+ggarrange(fpp_total_state, fpp_dens_state, common.legend = T, legend = "right") %>%
+  
+  ggsave(filename = "img/fpp_state.jpg", width = 12)
