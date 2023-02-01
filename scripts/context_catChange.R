@@ -6,8 +6,6 @@ library(here)
 library(tidyr)
 library(dplyr)
 library(ggplot2)
-#library(rstatix)
-#library(ggpubr)
 library(WRS2)
 library(emmeans)
 
@@ -34,8 +32,8 @@ tab_geral %>%
   group_by(code_muni) %>% 
   summarise(mean_change_nvc = mean(vari_perc_nvc),
             mean_change_fpp = mean(vari_perc_pop_rural),
-            agrifam_06 = mean(agrifam_06),
-            agrifam_17 = mean(agrifam_17),
+            agrifam_2000 = mean(agrifam_06),
+            agrifam_2010 = mean(agrifam_17),
             pop_urb_2000 = mean(pop_urb_2000),
             pop_urb_2010 = mean(pop_urb_2010),
             IDHM_L_2000 = mean(IDHM_L_2000),
@@ -45,7 +43,7 @@ tab_geral %>%
             gini_2000 = mean(gini_2000),
             gini_2010 = mean(gini_2010),
             u5mort_2000 = mean(u5mort_2000),
-            U5mort_2010 = mean(U5mort_2010)) %>%
+            u5mort_2010 = mean(U5mort_2010)) %>%
   filter(!is.na(.$code_muni)) %>%
   mutate(
     cat_change = if_else(
@@ -67,9 +65,6 @@ tab_geral %>%
     )
   ) %>%
   filter(cat_change != "stable") %>% 
-  rename(agrifam_2000 = agrifam_06,
-         agrifam_2010 = agrifam_17,
-         u5mort_2010 = U5mort_2010) %>% 
   pivot_longer(cols = 4:15, names_to = c(".value", "year"), names_pattern = "(.+)_(.+)") %>% 
   mutate(year = as.factor(year),
          cat_change = as.factor(cat_change)) %>% 
@@ -91,7 +86,7 @@ pairs(emm.gini, simple = "cat_change")
 
 ##agrifam----
 aov(data = tab_context, formula =  agrifam ~ year*cat_change) -> aov.agrifam
-plot(aov.agrifam)
+#plot(aov.agrifam)
 t2way(data = tab_context, formula =  agrifam ~ year*cat_change)-> Raov.agrifam
 mcp2atm(data = tab_context, formula =  agrifam ~ year*cat_change) -> post.agrifam
 post.agrifam$contrasts
@@ -105,7 +100,7 @@ pairs(emm.idhL, simple = "cat_change")
 
 ##u5mort----
 aov(data = tab_context, formula =  u5mort ~ year*cat_change) -> aov.u5mort
-plot(aov.u5mort)
+#plot(aov.u5mort)
 summary(aov.u5mort)
 emmeans(aov.u5mort, ~cat_change*year) -> emm.u5mort
 pairs(emm.u5mort, simple = "cat_change")
@@ -114,7 +109,7 @@ t2way(data = tab_context, formula =  u5mort ~ year*cat_change)
 
 ##pop_urb----
 aov(data = tab_context, formula =  pop_urb ~ year*cat_change) -> aov.pop_urb
-plot(aov.pop_urb)
+#plot(aov.pop_urb)
 
 t2way(data = tab_context, formula =  pop_urb ~ year*cat_change)-> Raov.pop_urb
 mcp2atm(data = tab_context, formula =  pop_urb ~ year*cat_change)-> post.pop_urb
@@ -139,7 +134,7 @@ tab_context %>%
   ggplot(aes(x=year, y = gini, group = cat_change, color = cat_change, fill = cat_change))+
   geom_smooth(method = "glm", alpha = 0.2)+
   scale_x_discrete(expand = expansion(add = 0.1), name = "Year")+
-  scale_y_continuous(name = "Gini income inequality index")+
+  scale_y_continuous(name = "Gini index")+
   scale_color_manual(name = "Forest-People", values = c("#018571", "#80cdc1", "#dfc27d", "#a6611a"),
                      label = c("gain-gain", "gain-lose", "lose-gain", "lose-lose"))+
   scale_fill_manual(name = "Forest-People", values = c("#018571", "#80cdc1", "#dfc27d", "#a6611a"),
@@ -151,7 +146,7 @@ tab_context %>%
   ggplot(aes(x=year, y = agrifam, group = cat_change, color = cat_change, fill = cat_change))+
   geom_smooth(method = "glm", alpha = 0.2)+
   scale_x_discrete(expand = expansion(add = 0.1), name = "Year")+
-  scale_y_continuous(name = "Number of family agriculure farms")+
+  scale_y_continuous(name = "Family agriculures")+
   scale_color_manual(name = "Forest-People", values = c("#018571", "#80cdc1", "#dfc27d", "#a6611a"),
                      label = c("gain-gain", "gain-lose", "lose-gain", "lose-lose"))+
   scale_fill_manual(name = "Forest-People", values = c("#018571", "#80cdc1", "#dfc27d", "#a6611a"),
@@ -193,3 +188,9 @@ tab_context %>%
   scale_fill_manual(name = "Forest-People", values = c("#018571", "#80cdc1", "#dfc27d", "#a6611a"),
                     label = c("gain-gain", "gain-lose", "lose-gain", "lose-lose"))+
   theme_classic() -> cat.urb_pop
+
+##Figure panel----
+ggarrange(cat.expov, cat.gini, cat.agrifam, cat.urb_pop, cat.IDHL, cat.u5mort,
+          common.legend = T) %>% 
+  ggsave(filename = here("img/fig.cat_change.jpg"), width = 10, bg = "white")
+  
