@@ -72,19 +72,19 @@ tab_geral_long %>%
   group_by(year) %>%
   summarise(across(.cols = 5:10, .fns = ~ mean(.x, na.rm = T), .names = "{.col}_mean")) %>%
   glimpse -> tab_mean_geral
-  
+
 tab_geral_long %>% 
   group_by(cat_change, year) %>% 
   summarise(across(.cols = 4:9, .fns = ~ mean(.x, na.rm = T), .names = "{.col}_group_mean"),
             across(.cols = 4:9, .fns = ~ sd(.x, na.rm = T), .names = "{.col}_group_sd")) %>%
   left_join(y = tab_mean_geral) %>% 
   group_by(cat_change, year) %>%
-  summarise(agrifam_diff = ((agrifam_group_mean/agrifam_mean) - 1)*100,
-            pop_urb_diff = ((pop_urb_group_mean/pop_urb_mean) -1)*100,
-            IDH_L_diff = ((IDHM_L_group_mean/IDHM_L_mean) -1)*100,
-            expov_diff = ((expov_group_mean/expov_mean) - 1)*100,
-            gini_diff = ((gini_group_mean/gini_mean) - 1)*100,
-            u5mort_diff = ((u5mort_group_mean/u5mort_mean) - 1)*100) %>%
+  summarise(agrifam_diff = agrifam_group_mean - agrifam_mean,
+            pop_urb_diff = pop_urb_group_mean - pop_urb_mean,
+            IDH_L_diff = IDHM_L_group_mean - IDHM_L_mean,
+            expov_diff = expov_group_mean - expov_mean,
+            gini_diff = gini_group_mean - gini_mean,
+            u5mort_diff = u5mort_group_mean - u5mort_mean) %>%
   glimpse -> tab_diff
 
 #Figures----
@@ -93,88 +93,81 @@ tab_diff %>%
   ggplot(aes(x = year, y = expov_diff, group = cat_change, color = cat_change))+
   geom_line()+
   geom_segment(x = 1, xend = 2, y = 0, yend = 0, color = "darkgrey")+
-  annotate(geom = "text", label = "All municipalities", x = 1.5, y = 0.25 ,color = "darkgrey")+
+  annotate(geom = "text", label = "All municipalities", x = 1.5, y = 0.1 ,color = "darkgrey")+
   scale_x_discrete(expand = expansion(add = 0.2), name = "Year")+
   labs(title = "a) Percentage of households in extreme poverty")+
-  scale_y_continuous(name = "Difference from the mean (%)")+
+  scale_y_continuous(name = "Difference from the mean of all municipalities")+
   scale_color_manual(name = "Forest-People", values = c("#018571", "#80cdc1", "#dfc27d", "#a6611a"),
                      label = c("gain-gain", "gain-lose", "lose-gain", "lose-lose"))+
-  theme_classic()+
-  theme(title = element_text(size = 9)) -> expov_diff
+  theme_classic() -> expov_diff
 
 ##gini----
 tab_diff %>% 
   ggplot(aes(x = year, y = gini_diff, group = cat_change, color = cat_change))+
   geom_line()+
   geom_segment(x = 1, xend = 2, y = 0, yend = 0, color = "darkgrey")+
-  annotate(geom = "text", label = "All municipalities", x = 1.5, y = 0.25 ,color = "darkgrey")+
+  annotate(geom = "text", label = "All municipalities", x = 1.5, y = 0.1 ,color = "darkgrey")+
   labs(title = "b) Gini income inequality index")+
-  scale_y_continuous(name = "Difference from the mean (%)")+
+  scale_y_continuous(name = "Difference from the mean of all municipalities")+
   scale_x_discrete(expand = expansion(add = 0.2), name = "Year")+
   scale_color_manual(name = "Forest-People", values = c("#018571", "#80cdc1", "#dfc27d", "#a6611a"),
                      label = c("gain-gain", "gain-lose", "lose-gain", "lose-lose"))+
-  theme_classic()+
-  theme(title = element_text(size = 9)) -> gini_diff
+  theme_classic() -> gini_diff
 
 ##agrifam----
 tab_diff %>% 
   ggplot(aes(x = year, y = agrifam_diff, group = cat_change, color = cat_change))+
   geom_line()+
   geom_segment(x = 1, xend = 2, y = 0, yend = 0, color = "darkgrey")+
-  annotate(geom = "text", label = "All municipalities", x = 1.5, y = 0.25 ,color = "darkgrey")+
+  annotate(geom = "text", label = "All municipalities", x = 1.5, y = 0.15 ,color = "darkgrey")+
   labs(title = "c) Percentage of farm land under family agriculture")+
-  scale_y_continuous(name = "Difference from the mean (%)")+
+  scale_y_continuous(name = "Difference from the mean of all municipalities")+
   scale_x_discrete(expand = expansion(add = 0.2), name = "Year")+
   scale_color_manual(name = "Forest-People", values = c("#018571", "#80cdc1", "#dfc27d", "#a6611a"),
                      label = c("gain-gain", "gain-lose", "lose-gain", "lose-lose"))+
-  theme_classic()+
-  theme(title = element_text(size = 9)) -> agrifam_diff
+  theme_classic() -> agrifam_diff
 
 ##pop_urb----
 tab_diff %>% 
   ggplot(aes(x = year, y = pop_urb_diff, group = cat_change, color = cat_change))+
   geom_line()+
   geom_segment(x = 1, xend = 2, y = 0, yend = 0, color = "darkgrey")+
-  annotate(geom = "text", label = "All municipalities", x = 1.5, y = 3 ,color = "darkgrey")+
+  annotate(geom = "text", label = "All municipalities", x = 1.5, y = 1.5 ,color = "darkgrey")+
   labs(title = "d) Number of people living in urban areas")+
-  scale_y_continuous(name = "Difference from the mean (%)")+
+  scale_y_continuous(name = "Difference from the mean of all municipalities")+
   scale_x_discrete(expand = expansion(add = 0.2), name = "Year")+
   scale_color_manual(name = "Forest-People", values = c("#018571", "#80cdc1", "#dfc27d", "#a6611a"),
                      label = c("gain-gain", "gain-lose", "lose-gain", "lose-lose"))+
-  theme_classic()+
-  theme(title = element_text(size = 9)) -> pop_urb_diff
+  theme_classic() -> pop_urb_diff
 
 ##IDH_L----
 tab_diff %>% 
   ggplot(aes(x = year, y = IDH_L_diff, group = cat_change, color = cat_change))+
   geom_line()+
   geom_segment(x = 1, xend = 2, y = 0, yend = 0, color = "darkgrey")+
-  annotate(geom = "text", label = "All municipalities", x = 1.5, y = 0.15 ,color = "darkgrey")+
+  annotate(geom = "text", label = "All municipalities", x = 1.5, y = 0.05 ,color = "darkgrey")+
   labs(title = "e) Human Development Index - Longevity")+
-  scale_y_continuous(name = "Difference from the mean (%)")+
+  scale_y_continuous(name = "Difference from the mean of all municipalities")+
   scale_x_discrete(expand = expansion(add = 0.2), name = "Year")+
   scale_color_manual(name = "Forest-People", values = c("#018571", "#80cdc1", "#dfc27d", "#a6611a"),
                      label = c("gain-gain", "gain-lose", "lose-gain", "lose-lose"))+
-  theme_classic()+
-  theme(title = element_text(size = 9)) -> IDHL_diff
+  theme_classic() -> IDHL_diff
 
 ##u5mort----
 tab_diff %>% 
   ggplot(aes(x = year, y = u5mort_diff, group = cat_change, color = cat_change))+
-  geom_line(linetype = "dashed")+
+  geom_line()+
   geom_segment(x = 1, xend = 2, y = 0, yend = 0, color = "darkgrey")+
-  annotate(geom = "text", label = "All municipalities", x = 1.5, y = 0.25 ,color = "darkgrey")+
-  labs(title = "f) Number of under five child death per thousand\n children")+
-  scale_y_continuous(name = "Difference from the mean (%)")+
+  annotate(geom = "text", label = "All municipalities", x = 1.5, y = 0.12 ,color = "darkgrey")+
+  labs(title = "f) Number of under five child death per thousand children")+
+  scale_y_continuous(name = "Difference from the mean of all municipalities")+
   scale_x_discrete(expand = expansion(add = 0.2), name = "Year")+
   scale_color_manual(name = "Forest-People", values = c("#018571", "#80cdc1", "#dfc27d", "#a6611a"),
                      label = c("gain-gain", "gain-lose", "lose-gain", "lose-lose"))+
-  theme_classic()+
-  theme(title = element_text(size = 9)) -> u5mort_diff
+  theme_classic() -> u5mort_diff
 
 ##Figure panel----
 ggarrange(expov_diff, gini_diff, agrifam_diff, pop_urb_diff, IDHL_diff, u5mort_diff,
           common.legend = T) %>% 
-  ggsave(filename = here("img/fig_mean_diff_perc.jpg"), bg = "white", width = 12)
+  ggsave(filename = here("img/fig_mean_diff.jpg"), bg = "white", width = 10)
 
-         
