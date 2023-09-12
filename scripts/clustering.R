@@ -14,6 +14,8 @@ library(GGally)
 library(geobr)
 library(spdep)
 library(rgeoda)
+library(tmap)
+library(cowplot)
 
 #Data----
 read.csv(file = here("data/tabela_geral.csv")) -> tab_geral
@@ -145,8 +147,6 @@ vegdist(
   ) -> dist_abs_change_mun
 pcoa(dist_abs_change_mun) -> pcoa_abs_change_mun
 
-summary(pcoa_abs_change_mun)
-
 biplot.pcoa(
   pcoa_abs_change_mun,
   Y = tab_abs_change_mun[,-1:-2]
@@ -169,13 +169,13 @@ plot(betadisp_abs_change_mun,
 TukeyHSD(betadisp_abs_change_mun)
 
 ###multivariate clustering through trees----
-hclust(d = dist_abs_change_mun, method = "average") -> clust_abs_change_mun
-plot(clust_abs_change_mun, cex =0.5, hang = 0)
-rect.hclust(tree = clust_abs_change_mun, k = 4)
-
-cutree(clust_abs_change_mun, k = 4) -> membs
-hclust(d = mun_dist, method = "average", members = membs) -> clust_membs
-plot(clust_membs, cex = 0.5)
+# hclust(d = dist_abs_change_mun, method = "average") -> clust_abs_change_mun
+# plot(clust_abs_change_mun, cex =0.5, hang = 0)
+# rect.hclust(tree = clust_abs_change_mun, k = 4)
+# 
+# cutree(clust_abs_change_mun, k = 4) -> membs
+# hclust(d = mun_dist, method = "average", members = membs) -> clust_membs
+# plot(clust_membs, cex = 0.5)
 
 ##"natural" grouping----
 sil_width_abs_change_mun <- c()
@@ -192,17 +192,17 @@ for(i in 2:8){
   
 }
 
-plot(
-  1:8,
-  sil_width_abs_change_mun,
-  xlab = "Number of clusters",
-  ylab = "Silhouette Width"
-  )
+as.data.frame(sil_width_abs_change_mun) -> a
 
-lines(
-  1:8,
-  sil_width_abs_change_mun
-  )
+ggplot()+
+  geom_point(data = a,
+             aes(x = 1:8, y = sil_width_abs_change_mun))+
+  geom_line(aes(x = 1:8, y = sil_width_abs_change_mun))+
+  scale_x_continuous(labels = c("1","2","3","4","5","6","7","8"),
+                     breaks = c(1,2,3,4,5,6,7,8))+
+  xlab("Number of clusters") +
+  ylab("Silhouette Width")+
+  theme_classic() -> plot_sil
 
 pam(
   dist_abs_change_mun,
@@ -213,8 +213,8 @@ pam(
 tab_abs_change_mun %>% 
   dplyr::select(-code_muni,
                 # -ends_with(c("2000","2010")),
-                -mean_change_nvc,
-                -mean_change_fpp
+                # -mean_change_nvc,
+                # -mean_change_fpp
                 ) %>%
   mutate(cluster = pam_fit2_abs_change_mun$clustering,
          cat_change = as.factor(cat_change)
@@ -237,7 +237,9 @@ tsne_obj_abs_change_mun$Y %>%
          name = tab_abs_change_mun$code_muni) -> tsne_data_abs_change_mun
 
 ggplot(aes(x = X, y = Y), data = tsne_data_abs_change_mun) +
-  geom_point(aes(color = cluster))
+  geom_point(aes(color = cluster))+
+  scale_color_discrete(name = "Cluster")+
+  theme_bw() -> plot_cluster
 
 ###pca----
 tab_abs_change_mun %>% 
@@ -254,10 +256,10 @@ ggplot(data = as.data.frame(pca_abs_change$x), aes(x = PC1, y = PC2))+
   geom_point()
 
 tab_abs_change_mun %>% 
-  select(cat_change) %>% 
+  select(mean_change_fpp) %>% 
   cbind(pca_abs_change$x) %>% 
   ggplot()+
-  geom_point(aes(x = PC1, y = PC2, color = cat_change))
+  geom_point(aes(x = PC1, y = PC2, color = mean_change_fpp > 0))
 
 ###geographical cluster----
 read_municipality(simplified = F)->mun_cat
@@ -308,13 +310,14 @@ tab_abs_change_mun_map %>%
          cluster = factor(moran_lbls[cluster_num], levels = moran_lbls)) %>%
   right_join(tab_abs_change_mun_map, by = "code_muni") %>%
   st_as_sf() %>%
-  glimpse -> nvc_clusterd
+  glimpse -> nvc_cluster
 
-ggplot(nvc_clusterd, aes(fill = cluster)) +
+ggplot(nvc_cluster, aes(fill = cluster)) +
   geom_sf(color = "white", size = 0) +
   scale_fill_manual(values = moran_colors, na.value = "green") +
   theme_dark()
 
+#####fpp change----
 local_moran(w = qw_tab_abs_change_mun,
             df = tab_abs_change_mun["mean_change_fpp"],
 ) -> Lmoran_change_fpp
@@ -329,9 +332,16 @@ tab_abs_change_mun_map %>%
          cluster = factor(moran_lbls_fpp[cluster_num], levels = moran_lbls_fpp)) %>%
   right_join(tab_abs_change_mun_map, by = "code_muni") %>%
   st_as_sf() %>%
-  glimpse -> fpp_clusterd
+  glimpse -> fpp_cluster
 
-ggplot(fpp_clusterd, aes(fill = cluster)) +
+ggplot(fpp_cluster, aes(fill = cluster)) +
   geom_sf(color = "white", size = 0) +
   scale_fill_manual(values = moran_colors_fpp, na.value = "green") +
-  theme_dark()
+  theme_map()
+
+#Export images----
+plot_grid(plot_sil, plot_cluster, labels = "auto") %>% 
+  ggsave(filename = here("img/sil_cluster.jpg"),
+         width = 8)
+
+         

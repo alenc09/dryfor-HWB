@@ -10,8 +10,7 @@ library(ggpubr)
 #data----
 read.csv(here("data/tabela_geral.csv"))-> tab_geral
 tab_geral %>% 
-  rename(buff_id = X) %>% 
-  glimpse -> tab_geral
+   glimpse
 
 #análises exploratórias----
 ## figure with all landscapes----
@@ -25,13 +24,11 @@ ggplot(data = na.omit(tab_geral)) +
   annotate(geom = "text", label = "n = 1138", x = 30, y = -80, color = "#80cdc1", fontface = "bold")+
   annotate(geom = "text", label = "n = 1808", x = -25, y = 150, color = "#dfc27d", fontface = "bold")+
   annotate(geom = "text", label = "n = 888", x = -25, y = -80, color = "#a6611a", fontface = "bold")+
-  labs(title = "a) all sampled landscapes (n = 5748)") +
-  xlab("Change in native vegetation cover (%)") +
+  xlab("Change in forest cover (%)") +
   ylab("Change in FPP (%)") +
-  scale_color_manual(values = c("#018571", "#80cdc1", "#dfc27d", "#a6611a"),
-                     label = c("gain-gain", "gain-lose", "lose-gain", "lose-lose"))+
+  scale_color_manual(values = c("#018571", "#80cdc1", "#dfc27d", "#a6611a"))+
   theme_classic()+
-  theme(legend.title = element_blank(),
+  theme(legend.position = "none",
         panel.background = element_rect(color = "white")) -> pop_nvc_all
 
 ##Figure without outliers and landscapes above on SD----

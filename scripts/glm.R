@@ -246,3 +246,28 @@ errorsarlm(formula = mean_change_nvc ~
            )-> SDEM_nvc
 
 summary(SDEM_nvc)
+
+#forest cover and fpp change correlation----
+glm(data = tab_abs_change_mun_map, mean_change_nvc ~ mean_change_fpp) -> glm.fpp_nvc
+summary(glm.fpp_nvc)
+
+lm.morantest(glm.fpp_nvc,
+             mat_dist_list_abs_change_mun,
+             alternative = "two.sided",
+             zero.policy = T)
+
+lm.LMtests(model = glm.fpp_nvc,
+           listw = mat_dist_list_abs_change_mun,
+           test = "all",
+           zero.policy = T
+) %>% 
+  summary 
+
+errorsarlm(formula = mean_change_nvc ~
+             mean_change_fpp,
+           data = tab_abs_change_mun_map,
+           listw = mat_dist_list_abs_change_mun,
+           zero.policy = T
+)-> SEM_fpp_nvc
+
+summary(SEM_fpp_nvc)

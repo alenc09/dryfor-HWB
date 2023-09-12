@@ -93,4 +93,10 @@ ggsave(plot=fig_map, filename = here("img/fig_map.jpg"),
        dpi = 300,
        bg = "white",
        width = 9)
-       
+      
+source(file = here("scripts/fpp_nvc.R"))
+plot_grid(pop_nvc_all, map_category_change, labels = "auto") %>% 
+  ggsave(plot = ., filename = here("img/fig_catChange.jpg"),
+         width = 8,
+         height = 4,
+         bg="white")
