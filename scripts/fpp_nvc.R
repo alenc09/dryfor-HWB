@@ -8,10 +8,9 @@ library(dplyr)
 library(ggpubr)
 
 #data----
-read.csv(here("tabela_geral.csv"))-> tab_geral
+read.csv(here("data/tabela_geral.csv"))-> tab_geral
 tab_geral %>% 
-  rename(buff_id = X) %>% 
-  glimpse -> tab_geral
+   glimpse
 
 #análises exploratórias----
 ## figure with all landscapes----
@@ -21,14 +20,16 @@ ggplot(data = na.omit(tab_geral)) +
   ylim(-100, 200) +
   geom_hline(yintercept = 0) +
   geom_vline(xintercept = 0) +
-  labs(title = "all buffers") +
-  xlab("Variation in native vegetation cover (%)") +
-  ylab("Variation in FPP (%)") +
-  scale_color_manual(values = c("#018571", "#80cdc1", "#dfc27d", "#a6611a"),
-                     label = c("gain-gain", "gain-lose", "lose-gain", "lose-lose"))+
+  annotate(geom = "text", label = "n = 1894", x = 30, y = 150, color = "#018571", fontface = "bold")+
+  annotate(geom = "text", label = "n = 1138", x = 30, y = -80, color = "#80cdc1", fontface = "bold")+
+  annotate(geom = "text", label = "n = 1808", x = -25, y = 150, color = "#dfc27d", fontface = "bold")+
+  annotate(geom = "text", label = "n = 888", x = -25, y = -80, color = "#a6611a", fontface = "bold")+
+  xlab("Change in forest cover (%)") +
+  ylab("Change in FPP (%)") +
+  scale_color_manual(values = c("#018571", "#80cdc1", "#dfc27d", "#a6611a"))+
   theme_classic()+
-  theme(legend.title = element_blank(),
-        panel.background = element_rect(color = "white"))-> pop_nvc_all
+  theme(legend.position = "none",
+        panel.background = element_rect(color = "white")) -> pop_nvc_all
 
 ##Figure without outliers and landscapes above on SD----
 Q <- quantile(tab_geral$vari_perc_nvc, probs=c(.25, .75), na.rm = TRUE)
@@ -63,18 +64,22 @@ tab_s_outlier %>%
   geom_point(alpha = 0.3, stroke = 0, size = 2.5)+
   geom_hline(yintercept = 0)+
   geom_vline(xintercept = 0)+
-  labs(title = "over one SD")+
+  labs(title = "b) Sampled landscapes over one SD (n = 496)")+
   scale_color_manual(values = c("#018571", "#80cdc1", "#dfc27d", "#a6611a"),
                      label = c("gain-gain", "gain-lose", "lose-gain", "lose-lose"))+
-  xlab("Variation in native vegetation cover (%)") +
-  ylab("Variation in FPP (%)")+
+  annotate(geom = "text", label = "n = 86", x = 10, y = 15, color = "#018571", fontface = "bold")+
+  annotate(geom = "text", label = "n = 143", x = 10, y = -5, color = "#80cdc1", fontface = "bold")+
+  annotate(geom = "text", label = "n = 135", x = -10, y = 15, color = "#dfc27d", fontface = "bold")+
+  annotate(geom = "text", label = "n = 132", x = -10, y = -5, color = "#a6611a", fontface = "bold")+
+  xlab("Change in native vegetation cover (%)") +
+  ylab("Change in FPP (%)")+
   theme_classic()+
   theme(legend.title = element_blank(),
         panel.background = element_rect(color = "white")) -> pop_nvc_sd
 
-#ggarrange(pop_nvc_all, pop_nvc_sd, common.legend = T, legend = "bottom") %>% 
-  # ggpubr:::bgcolor("White") %>% 
-#  ggsave(plot = ., filename = here("img/fig.fpp_nvc.png"), dpi = 300)
+ggarrange(pop_nvc_all, pop_nvc_sd, common.legend = T, legend = "bottom") %>% 
+  ggsave(plot = ., filename = here("img/fig.fpp_nvc.jpg"), dpi = 300,
+         bg = "white", width = 10)
 
 ##counting outliers----
 tab_s_outlier %>%  

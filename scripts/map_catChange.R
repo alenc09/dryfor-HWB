@@ -7,10 +7,10 @@ library(geobr)
 library(dplyr)
 library(sf)
 library(ggplot2)
-library(cowplot)
+library(ggpubr)
 
 #data----
-read.csv(file = here("tabela_geral.csv"))-> tab_geral
+read.csv(file = here("data/tabela_geral.csv"))-> tab_geral
 read_municipality(simplified = F)-> mun_br
 read_biomes() %>% 
   filter (name_biome == "Caatinga") -> caat_shp
@@ -60,12 +60,13 @@ st_as_sf(tab_cat_change) %>%
 
 tab_cat_change %>% 
 ggplot() +
-  geom_sf(aes(geometry = geom, fill = cat_change), lwd = 0) +
+  geom_sf(aes(geometry = geom, fill = cat_change), linewidth = 0.2, color = "grey") +
   scale_fill_manual(
     values = c("#018571", "#80cdc1", "#dfc27d", "#a6611a"),
     name = "Forest-People",
-    label = c("gain-gain", "gain-lose", "lose-gain", "lose-lose"))+
-  geom_sf(data = states_caat[-1,], fill="transparent", lwd=0.2)+
+    label = c("gain-gain", "gain-lose", "lose-gain", "lose-lose"),
+    na.value = "grey90")+
+  geom_sf(data = states_caat[-1,], fill="transparent", linewidth=0.3)+
   coord_sf(xlim = c(-48, -34), ylim = c(-17.1, -3))+
   geom_text(data = states_caat[-1,], aes(x= c(-42, -39.5,-36.5,-35.5, -34.5, -34.4, -36, -39,-42.4),
                                          y = c(-16.8, -15, -11, -10, -8.5, -7, -4.7, -2.9, -5),
@@ -77,17 +78,25 @@ ggplot() +
         legend.position = c(0.8, 0.2)) -> map_category_change
 
 #map inset####
-#Inset map####
-ggplot()+
-  geom_sf(data = br, fill = "transparent")+
-  geom_sf(data = caat_shp, fill = "grey")+
-  geom_sf(data = br_states, fill = "transparent", lwd = 0.1)+
-  theme_map() -> inset_map
+# #Inset map####
+# ggplot()+
+#   geom_sf(data = br, fill = "transparent")+
+#   geom_sf(data = caat_shp, fill = "grey")+
+#   geom_sf(data = br_states, fill = "transparent", lwd = 0.1)+
+#   theme_map() -> inset_map
 
-ggdraw()+
-  draw_plot(map_category_change)+
-  draw_plot(inset_map,
-            x = 0.03, y = 0.6, width = 0.40, height = 0.40) -> map_category_change_inset
+#Figure map----
+source(file = here("scripts/map_fpp.R"))
+ggarrange(map_fpp_change_inset, map_category_change, labels = c("a)", "b)")) -> fig_map
 
-ggsave(plot=map_category_change_inset, filename = here("img/map_category_change.png"), dpi = 600)
-       
+ggsave(plot=fig_map, filename = here("img/fig_map.jpg"),
+       dpi = 300,
+       bg = "white",
+       width = 9)
+      
+source(file = here("scripts/fpp_nvc.R"))
+plot_grid(pop_nvc_all, map_category_change, labels = "auto") %>% 
+  ggsave(plot = ., filename = here("img/fig_catChange.jpg"),
+         width = 8,
+         height = 4,
+         bg="white")

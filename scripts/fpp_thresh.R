@@ -1,5 +1,4 @@
-# Thu Jul 14 13:50:46 2022 ------------------------------
-#Script para montar figura do número de FPP por limiar de cobertura florestal das paisagens
+#Script para calcular curva de acumulo de FPP (e mudança) por limiar de cobertura florestal das paisagens
 
 #library----
 library(here)
@@ -7,13 +6,16 @@ library(dplyr)
 library(tidyr)
 library(sf)
 library(ggplot2)
+library(cowplot)
+library(scales)
 
 #data----
 #load files----
-read.csv(file = here("buff_lsm_2006.csv"), sep = ",", dec=".")-> buff_lsm_2006
-read.csv(file = here("buff_lsm_2017.csv"))-> buff_lsm_2017
+read.csv(file = here("data/buff_lsm_2006.csv"), sep = ",", dec=".")-> buff_lsm_2006
+read.csv(file = here("data/buff_lsm_2017.csv"))-> buff_lsm_2017
 st_read("data/buff_5km_pop_rural_WP_2006.shp")-> pop_rural_2006
 st_read("data/buff_5km_pop_rural_WP_2017.shp")-> pop_rural_2017
+read.csv(file = here("data/tabela_geral.csv"))-> tab_geral
 
 ##organizing buffer land cover data----
 buff_lsm_2006 %>% 
@@ -160,51 +162,151 @@ tab_obj1 %>%
   left_join(y = table_pop, by = c("plot_id" = "buff_id")) %>% 
   glimpse ->tab_obj1
 
-##table for figure----
-c(10, 20, 30, 40, 50, 60, 70, 80, 90, 100)-> perc_thresh
+##cumulative threshold----
+seq(from = 10, to = 100, by = 10) -> perc_thresh
 
+c() -> list_fpp06
 for(i in perc_thresh){
-  tab_obj1 %>%
-    filter(pland_nvc_06 > i) %>%
+  tab_geral %>%
+    filter(pland_nvc_06 >= i) %>%
     summarise(fpp = sum(pop_rural_WP_06)) %>%
-    glimpse
-}
-c(4853511, 4305189, 3644584, 3037533, 2428882, 1893891, 1312354, 794606.3, 292520, 5.341603) -> fpp_06
+    glimpse -> list_fpp06[i]
+} 
 
+list_fpp06 %>% 
+  unlist %>% 
+  glimpse -> fpp_06
+
+c() -> list_fpp17
 for(i in perc_thresh){
-  tab_obj1 %>%
-    filter(pland_nvc_17 > i) %>%
+  tab_geral %>%
+    filter(pland_nvc_17 >= i) %>%
     summarise(fpp = sum(pop_rural_WP_17)) %>%
-    glimpse
+    glimpse -> list_fpp17[i]
 }
-c(5239184, 4646104, 3976349, 3323920, 2697328, 2079576, 1500688, 929346.9, 339360.2, 3.231455) -> fpp_17
+
+list_fpp17 %>% 
+  unlist %>% 
+  glimpse -> fpp_17
 
 as.data.frame(cbind(perc_thresh, fpp_06, fpp_17))-> tab_fpp
 
-
-#Figure----
-c("fpp_06" = "#ffa600", "fpp_17" = "#5c3811") -> colors
-
+##change per threshold----
 tab_fpp %>% 
+  mutate(fpp_change = fpp_17 - fpp_06) %>% 
+  glimpse -> tab_fpp_change
+
+##summary table----
+tab_geral %>% 
+  filter(pland_nvc_17 >= 100) %>%
+  summarise(fpp_06 = sum(pop_rural_WP_06),
+            fpp_17 = sum(pop_rural_WP_17),
+            abs_change = fpp_17 - fpp_06,
+            mean_fpp_change = mean(pop_rural_WP_17 - pop_rural_WP_06),
+            sd_fpp_change = sd(pop_rural_WP_17 - pop_rural_WP_06),
+            n = n(),
+            mean_nvc = mean(pland_nvc_17),
+            sd_nvc = sd(pland_nvc_17)
+            ) %>%
+  glimpse
+
+#Figures----
+## Cumulative curve extrapolated to entire biome----
+tab_fpp %>%
+  mutate(fpp_06_extra = floor((fpp_06*100)/53.54764),
+         fpp_17_extra = floor((fpp_17*100)/53.54764)) %>% 
+  #glimpse
   ggplot(aes(x = perc_thresh))+
-  geom_point(aes(y = fpp_06, color = "fpp_06"))+
-  geom_line(aes(y = fpp_06,color = "fpp_06"))+
-  geom_point(aes(y = fpp_17, color = "fpp_17"))+
-  geom_line(aes(y = fpp_17, color = "fpp_17"))+
-  scale_x_continuous(breaks = perc_thresh)+
-  scale_y_continuous(labels = c(0,1,2,3,4,5))+
-  scale_color_manual(values = colors, name = "Year", labels = c("2006", "2017"))+
+  geom_segment(aes(x = 0, xend = 20, y = 8951887, yend = 8951887), linetype = "dashed", color = "lightgrey")+
+  geom_segment(aes(x = 20, xend = 20, y = 0, yend = 8951887), linetype = "dashed", color = "lightgrey")+
+  geom_segment(aes(x = 0, xend = 50, y = 5396928, yend = 5396928), linetype = "dashed", color = "lightgrey")+
+  geom_segment(aes(x = 50, xend = 50, y = 0, yend = 5396928), linetype = "dashed", color = "lightgrey")+
+  geom_segment(aes(x = 0, xend = 70, y = 3114681, yend = 3114681), linetype = "dashed", color = "lightgrey")+
+  geom_segment(aes(x = 70, xend = 70, y = 0, yend = 3114681), linetype = "dashed", color = "lightgrey")+
+  geom_point(aes(y = fpp_06_extra, color = "fpp_06"))+
+  geom_line(aes(y = fpp_06_extra,color = "fpp_06"))+
+  geom_point(aes(y = fpp_17_extra, color = "fpp_17"))+
+  geom_line(aes(y = fpp_17_extra, color = "fpp_17"))+
+  scale_x_continuous(breaks = perc_thresh, expand = expansion(add = 1))+
+  scale_y_continuous(labels = c(0, 2, 3.1, 4, 5.3, 6, 8, 8.9, 10),
+                     breaks = c(0, 2000000, 3114681, 4000000, 5396928, 6000000, 8000000, 8951887, 10000000),
+                     expand = expansion(mult = 0.01))+
+ scale_color_manual(values = c("#ffa600", "#5c3811"), name = "Year", labels = c("2006", "2017"))+
   labs(x = "Forest cover threshold (%)", y = "Number of FPP (million)", color = "Legend")+
   theme_classic()+
   theme(legend.text = element_text(size = 8),
         legend.title = element_text(size = 10),
-        legend.position = c(0.8,0.8)) -> fig.fpp
+        legend.position = c(0.9,0.6),
+        plot.margin = margin(6, 30, 6, 6))  -> fig.fpp
 
-ggsave(plot = fig.fpp, filename = "img/fig_fpp.jpg", dpi = 300)
+#ggsave(plot = fig.fpp, filename = "img/fig_fpp.jpg", dpi = 300)
 
-##% of decrease for each threshold----
+## changes per category of forest cover ---- 
+options(scipen=10000)
 tab_fpp %>%
-mutate(change_fpp = (100-(fpp_17[10]/fpp_17[1])*100)/10) %>% 
-  glimpse
+  mutate(fpp_06_extra = floor((fpp_06*100)/53.54764),
+         fpp_17_extra = floor((fpp_17*100)/53.54764),
+         fpp_change_extra = fpp_17_extra - fpp_06_extra) %>% 
+  #glimpse
+  ggplot(aes(x = as.factor(perc_thresh), y = fpp_change_extra)) +
+  geom_bar(stat = "identity", fill = "#018571")+
+  scale_y_continuous(labels = comma, expand = c(0, 0),
+                     breaks = c(200000, 384658, 568894, 600000, 733505, 800000))+
+  geom_segment(aes(x = 0, xend = 2, y = 733505, yend = 733505), linetype = "dashed", color = "lightgrey")+
+  geom_segment(aes(x = 0, xend = 5, y = 568894, yend = 568894), linetype = "dashed", color = "lightgrey")+
+  geom_segment(aes(x = 0, xend = 7, y = 384658, yend = 384658), linetype = "dashed", color = "lightgrey")+
+  labs(x = " Forest cover threshold (%)", y = "Absolute change")+
+  theme_classic() -> fig.fpp_cat_change
 
-  
+tab_geral %>% 
+  filter(vari_perc_pop_rural <200) %>% 
+  ggplot()+
+  geom_histogram(aes(x=vari_perc_pop_rural), bins = 100)+
+  geom_vline(xintercept = mean(tab_geral$vari_perc_pop_rural, na.rm = T), color = "red")+
+  geom_vline(xintercept = median(tab_geral$vari_perc_pop_rural, na.rm = T), color = "red", linetype = "dashed")+
+  scale_x_continuous(limits = c(-100, 200), name = "Change in FPP number per landscape (%)")+
+  scale_y_continuous(expand = c(0, 0), name = ("Frequency"))+
+  theme_classic() ->supp_fig_3
+
+## panel fpp change----
+plot_grid(fig.fpp, fig.fpp_cat_change, labels = "auto") -> fig.fpp_change
+
+# ggsave(plot = fig.fpp_change, filename = here("img/fig.fpp_change.jpg"), width = 8, bg = "White")
+# ggsave(plot = supp_fig_3, filename = here("img/supp_fig_3.jpg"))
+
+## FPP per forest cover category----
+tab_geral %>% 
+  select(buff_id, pland_nvc_06, pland_nvc_17, pop_rural_WP_06, pop_rural_WP_17) %>% 
+  rename(fpp_06 = pop_rural_WP_06,
+         fpp_17 = pop_rural_WP_17) %>% 
+  mutate(catFc_06 = if_else(0 < pland_nvc_06 & pland_nvc_06 < 33,
+                             true = "0-33",
+                             false = if_else(33 <= pland_nvc_06 & pland_nvc_06 < 66,
+                                             true = "33-66",
+                                             false = if_else(66 < pland_nvc_06 & pland_nvc_06 <= 100,
+                                                             true = "66-100",
+                                                             false = NA))),
+         catFc_17 = if_else(0 < pland_nvc_17 & pland_nvc_17 < 33,
+                             true = "0-33",
+                             false = if_else(33 <= pland_nvc_17 & pland_nvc_17 < 66,
+                                             true = "33-66",
+                                             false = if_else(66 < pland_nvc_17 & pland_nvc_17 <= 100,
+                                                             true = "66-100",
+                                                             false = NA)))) %>% 
+  pivot_longer(cols = -1:-3,
+               names_to = c(".value", "year"),
+               names_sep = "_" ,
+               values_to = c("fpp", "cat_fc"),
+               names_transform = list(year = as.factor),
+               values_transform = list(catFc = as.factor))%>% 
+  group_by(year, catFc) %>% 
+  summarise(fpp_total = sum(fpp)) %>% 
+  glimpse %>% 
+ggplot()+
+  geom_col(aes(x=catFc, y = fpp_total, fill = year), position = "dodge")+
+  scale_x_discrete(name = "Forest cover (%)")+
+  scale_y_continuous(name = "Forest-proximate population size", expand = c(0,0), labels = comma)+
+  scale_fill_manual(values = c("#ffa600", "#5c3811"), name = "Year", labels = c("2006", "2017"))+
+  theme_classic() -> fpp_catFC
+
+ggsave(plot = fpp_catFC, filename = here("img/fig1_alter.jpg"), dpi = 3000)
