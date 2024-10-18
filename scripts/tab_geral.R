@@ -351,4 +351,4 @@ tab_1 %>%
   glimpse -> tab_1
 
 #export----
-write.csv(x = tab_1, file = here("tabela_geral.csv"))
+#write.csv(x = tab_1, file = here("tabela_geral.csv"))
