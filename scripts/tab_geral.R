@@ -6,349 +6,251 @@ library(sf)
 library(dplyr)
 library(here)
 library(readxl)
-library(tidyr)
-library(geobr)
+library(writexl)
+# library(tidyr)
+# library(geobr)
 
 
 #data----
-read.csv(file = here("buff_lsm_2006.csv"), sep = ",", dec=".")-> buff_lsm_2006
-read.csv(file = here("buff_lsm_2017.csv"))-> buff_lsm_2017
-read_xlsx("/home/alenc/Documents/Doutorado/tese/cap0/data/tabela2006.xlsx") -> table_agrifamiliar_2006
-read_xlsx("/home/alenc/Documents/Doutorado/tese/cap0/data/tabela2006.xlsx", sheet = 2) -> table_agrifamiliar_area_2006
-read_xlsx("/home/alenc/Documents/Doutorado/tese/cap0/data/tabela2017.xlsx") -> table_agrifamiliar_2017
-read_xlsx("/home/alenc/Documents/Doutorado/tese/cap0/data/tabela2017.xlsx", sheet = 2) -> table_agrifamiliar_area_2017
-st_read(here("data/buff_5km_pop_rural_WP_2006.shp"))-> pop_rural_2006
-st_read(here("data/buff_5km_pop_rural_WP_2017.shp"))-> pop_rural_2017
-st_read(here("data/caat_mun.shp"))-> caat_mun
-st_read(here("data/sc_rural_caat.shp"))-> sc_rural_caat
-st_read(here("data/buffs_distance.shp"))-> dist_sede
-st_read(here("data/sc_urbano_caat_pop_2006.shp"))-> pop_urb_2006
-st_read(here("data/sc_urbano_caat_pop_2017.shp"))-> pop_urb_2017
-st_read(here("data/buff_code_sc_muni_uf.shp"))-> buff_codes
-read_municipality(simplified = F) -> br_mun
-st_read(here("data/BR_SETORES_2017_CENSOAGRO.shp"))-> sc_br
+st_read("/Users/user/Library/CloudStorage/OneDrive-Personal/Documentos/Doutorado/tese/cap3/data/hexGrid_landcover_caat_2006.shp") -> hexGrid_landcover_2006
+st_read("/Users/user/Library/CloudStorage/OneDrive-Personal/Documentos/Doutorado/tese/cap3/data/hexGrid_landcover_caat_2017.shp") -> hexGrid_landcover_2017
+st_read("/Users/user/Library/CloudStorage/OneDrive-Personal/Documentos/Doutorado/tese/cap3/data/popRur_2006.shp") -> popRur_2006
+st_read("/Users/user/Library/CloudStorage/OneDrive-Personal/Documentos/Doutorado/tese/cap3/data/popRur_2017.shp") -> popRur_2017
+st_read("/Users/user/Library/CloudStorage/OneDrive-Personal/Documentos/Doutorado/tese/cap3/data/popUrb_2006.shp") -> popUrb_2006
+st_read("/Users/user/Library/CloudStorage/OneDrive-Personal/Documentos/Doutorado/tese/cap3/data/popUrb_2017.shp") -> popUrb_2017
+st_read("/Users/user/Library/CloudStorage/OneDrive-Personal/Documentos/Doutorado/tese/cap3/data/hexGrid_mun.shp") -> hexGrid_mun
+read_xlsx("/Users/user/Library/CloudStorage/OneDrive-Personal/Documentos/Doutorado/tese/cap3/data/pibs_brasil.xlsx", sheet = 1) -> pibTot_br
+read_xlsx("/Users/user/Library/CloudStorage/OneDrive-Personal/Documentos/Doutorado/tese/cap3/data/pibs_brasil.xlsx", sheet = 2) -> pibAgro_br
+read_xlsx("/Users/user/Library/CloudStorage/OneDrive-Personal/Documentos/Doutorado/tese/cap3/data/pibs_brasil.xlsx", sheet = 3) -> pibInd_br
+read_xlsx("/Users/user/Library/CloudStorage/OneDrive-Personal/Documentos/Doutorado/tese/cap3/data/pibs_brasil.xlsx", sheet = 4) -> pibServPriv_br
+read_xlsx("/Users/user/Library/CloudStorage/OneDrive-Personal/Documentos/Doutorado/tese/cap3/data/pibs_brasil.xlsx", sheet = 5) -> pibServPub_br
+read_xlsx("/Users/user/Library/CloudStorage/OneDrive-Personal/Documentos/Doutorado/tese/cap1/forest-develop/dbcap1_clean.xlsx") -> tabela_geral
 
-#manipulation----
+#organization----
+
 ##native vegetation cover----
-buff_lsm_2006 %>% 
-  select(plot_id, metric, class, value) %>% 
-  filter(plot_id != 1606) %>% 
-  pivot_wider(id_cols = plot_id,
-              names_sep = "_",
-              names_from = c(metric, class),
-              values_from = value
-              ) %>% 
-  select(plot_id,shdi_NA, pland_3, pland_4, pland_5, pland_9, pland_11, pland_12, 
-         pland_13, pland_15, pland_20, pland_21, pland_23, pland_24, pland_25,
-         pland_29, pland_30, pland_31, pland_32, pland_33, pland_39, pland_41,
-         pland_46, pland_48, ca_3, ca_4, ca_5, ca_9, ca_11, ca_12, ca_13, ca_15,
-         ca_20, ca_21, ca_23, ca_24, ca_25, ca_29, ca_30, ca_31, ca_32, ca_33,
-         ca_39, ca_41, ca_46, ca_48) %>%
-  replace(is.na(.), 0) %>% 
-  rename(pland_forest = pland_3,
-         pland_savanna = pland_4,
-         pland_mangrove = pland_5,
-         pland_Fplantation = pland_9,
-         pland_wetland = pland_11,
-         pland_grass = pland_12,
-         pland_otherVeg = pland_13,
-         pland_pasture = pland_15,
-         pland_sugar = pland_20,
-         pland_mosaicAP = pland_21,
-         pland_sand = pland_23,
-         pland_urban = pland_24,
-         pland_otherNveg = pland_25,
-         pland_rocky = pland_29,
-         pland_mine = pland_30,
-         pland_aquacult = pland_31,
-         pland_salt = pland_32,
-         pland_water = pland_33,
-         pland_soy = pland_39,
-         pland_otherTcrop = pland_41,
-         pland_coffe = pland_46,
-         pland_otherPcrop = pland_48,
-         ca_forest = ca_3,
-         ca_savanna = ca_4,
-         ca_mangrove = ca_5,
-         ca_Fplantation = ca_9,
-         ca_wetland = ca_11,
-         ca_grass = ca_12,
-         ca_otherVeg = ca_13,
-         ca_pasture = ca_15,
-         ca_sugar = ca_20,
-         ca_mosaicAP = ca_21,
-         ca_sand = ca_23,
-         ca_urban = ca_24,
-         ca_otherNveg = ca_25,
-         ca_rocky = ca_29,
-         ca_mine = ca_30,
-         ca_aquacult = ca_31,
-         ca_salt = ca_32,
-         ca_water = ca_33,
-         ca_soy = ca_39,
-         ca_otherTcrop = ca_41,
-         ca_coffe = ca_46,
-         ca_otherPcrop = ca_48
-         ) #-> tab_forest_06
-%>% 
-  mutate(
-    plot_id = plot_id,
-    pland_nvc_06 = pland_forest + pland_savanna + pland_grass + pland_rocky +
-      pland_mangrove + pland_wetland + pland_otherVeg + pland_salt,
-    pland_agri_06 = pland_pasture + pland_mosaicAP + pland_otherPcrop +
-      pland_otherTcrop + pland_sugar + pland_aquacult + pland_coffe +
-      pland_Fplantation + pland_soy,
-    ca_nvc_06 = ca_forest + ca_savanna + ca_grass + ca_rocky +
-      ca_mangrove + ca_wetland + ca_otherVeg + ca_salt,
-    ca_agri_06 = ca_pasture + ca_mosaicAP + ca_otherPcrop +
-      ca_otherTcrop + ca_sugar + ca_aquacult + ca_coffe +
-      ca_Fplantation + ca_soy,
-    pland_urban_06 = pland_urban,
-    ca_urban_06 = ca_urban,
-    shdi_06 = shdi_NA,
-    .keep = "none"
-  ) %>% 
-    glimpse #-> tab_1
+###2006----
+hexGrid_landcover_2006 %>% 
+  select(id, HISTO_3, HISTO_4) %>%
+  st_drop_geometry() %>% 
+  mutate(forestPix = HISTO_3 + HISTO_4,
+         forest_areaHa_2006 = forestPix*0.09,
+         forest_perc_2006 = round((forest_areaHa_2006/1624)*100, digits = 2)) %>% 
+  select(id, forest_areaHa_2006, forest_perc_2006) %>% 
+  glimpse -> hexGrid_forest_2006
+###2017----
+hexGrid_landcover_2017 %>% 
+  select(id, HISTO_3, HISTO_4) %>%
+  st_drop_geometry() %>% 
+  mutate(forestPix = HISTO_3 + HISTO_4,
+         forest_areaHa_2017 = forestPix*0.09,
+         forest_perc_2017 = round((forest_areaHa_2017/1624)*100, digits = 2)) %>% 
+  select(id, forest_areaHa_2017, forest_perc_2017) %>% 
+  glimpse -> hexGrid_forest_2017
 
-buff_lsm_2017 %>% 
-  select(plot_id, metric, class, value) %>% 
-  filter(plot_id != 1606) %>% 
-  pivot_wider(id_cols = plot_id,
-              names_sep = "_",
-              names_from = c(metric, class),
-              values_from = value) %>%
-  select(plot_id,shdi_NA, pland_3, pland_4, pland_5, pland_9, pland_11, pland_12, 
-         pland_13, pland_15, pland_20, pland_21, pland_23, pland_24, pland_25,
-         pland_29, pland_30, pland_31, pland_32, pland_33, pland_39, pland_41,
-         pland_46, pland_48, ca_3, ca_4, ca_5, ca_9, ca_11, ca_12, ca_13, ca_15,
-         ca_20, ca_21, ca_23, ca_24, ca_25, ca_29, ca_30, ca_31, ca_32, ca_33,
-         ca_39, ca_41, ca_46, ca_48) %>%
-  replace(is.na(.), 0) %>% 
-  rename(pland_forest = pland_3,
-         pland_savanna = pland_4,
-         pland_mangrove = pland_5,
-         pland_Fplantation = pland_9,
-         pland_wetland = pland_11,
-         pland_grass = pland_12,
-         pland_otherVeg = pland_13,
-         pland_pasture = pland_15,
-         pland_sugar = pland_20,
-         pland_mosaicAP = pland_21,
-         pland_sand = pland_23,
-         pland_urban = pland_24,
-         pland_otherNveg = pland_25,
-         pland_rocky = pland_29,
-         pland_mine = pland_30,
-         pland_aquacult = pland_31,
-         pland_salt = pland_32,
-         pland_water = pland_33,
-         pland_soy = pland_39,
-         pland_otherTcrop = pland_41,
-         pland_coffe = pland_46,
-         pland_otherPcrop = pland_48,
-         ca_forest = ca_3,
-         ca_savanna = ca_4,
-         ca_mangrove = ca_5,
-         ca_Fplantation = ca_9,
-         ca_wetland = ca_11,
-         ca_grass = ca_12,
-         ca_otherVeg = ca_13,
-         ca_pasture = ca_15,
-         ca_sugar = ca_20,
-         ca_mosaicAP = ca_21,
-         ca_sand = ca_23,
-         ca_urban = ca_24,
-         ca_otherNveg = ca_25,
-         ca_rocky = ca_29,
-         ca_mine = ca_30,
-         ca_aquacult = ca_31,
-         ca_salt = ca_32,
-         ca_water = ca_33,
-         ca_soy = ca_39,
-         ca_otherTcrop = ca_41,
-         ca_coffe = ca_46,
-         ca_otherPcrop = ca_48
-  ) # -> tab_forest_17
-%>%
-  mutate(
-    plot_id = plot_id,
-    pland_nvc_17 = pland_forest + pland_savanna + pland_grass + pland_rocky +
-      pland_mangrove + pland_wetland + pland_otherVeg + pland_salt,
-    pland_agri_17 = pland_pasture + pland_mosaicAP + pland_otherPcrop +
-      pland_otherTcrop + pland_sugar + pland_aquacult + pland_coffe +
-      pland_Fplantation + pland_soy,
-    ca_nvc_17 = ca_forest + ca_savanna + ca_grass + ca_rocky +
-      ca_mangrove + ca_wetland + ca_otherVeg + ca_salt,
-    ca_agri_17 = ca_pasture + ca_mosaicAP + ca_otherPcrop +
-      ca_otherTcrop + ca_sugar + ca_aquacult + ca_coffe +
-      ca_Fplantation + ca_soy,
-    pland_urban_17 = pland_urban,
-    ca_urban_17 = ca_urban,
-    shdi_17 = shdi_NA,
-    .keep = "none"
+##rural pop----
+###2006----
+popRur_2006 %>% 
+  select(id, popRur_200) %>% 
+  st_drop_geometry() %>% 
+  mutate(popRur_2006 = round(popRur_200), .keep = "unused") %>% 
+  glimpse -> popRur_2006
+
+###2017----
+popRur_2017 %>% 
+  select(id, popRur_201) %>%
+  st_drop_geometry() %>%
+  mutate(popRur_2017 = round(popRur_201), .keep = "unused") %>%
+  glimpse -> popRur_2017
+
+##Urban pop----
+###2006----
+popUrb_2006 %>% 
+  select(id, popUrb_200) %>%
+  st_drop_geometry() %>%
+  mutate(popUrb_2006 = round(popUrb_200), .keep = "unused") %>%
+  glimpse -> popUrb_2006
+###2017----
+popUrb_2017 %>% 
+  select(id, popUrb_201) %>%
+  st_drop_geometry() %>%
+  mutate(popUrb_2017 = round(popUrb_201), .keep = "unused") %>%
+  glimpse -> popUrb_2017
+
+##PIB per municipality----
+pibTot_br %>% 
+  left_join(y = pibAgro_br) %>% 
+  left_join(y = pibInd_br) %>% 
+  left_join(y = pibServPriv_br) %>% 
+  left_join(y = pibServPub_br) %>% 
+  select(-Município) %>% 
+  rename(code_mun = Cód.) %>% 
+  mutate(code_mun = as.factor(code_mun)) %>% 
+  mutate(across(where(is.character), as.double))%>% 
+  glimpse -> pibs_br
+
+hexGrid_mun %>% 
+  rename(hex_id = id,
+         code_mun = GEOCODIG_M) %>% 
+  mutate(code_mun = as.factor(code_mun)) %>% 
+  left_join(y = pibs_br) %>% 
+  st_drop_geometry() %>% 
+  glimpse -> hexGrid_pib
+
+##otras variables----
+tabela_geral %>% 
+  select(code_muni, expov_2000, expov_2010, gini_2000, gini_2010, u5mort_2000, u5mort_2010.x) %>% 
+  mutate(code_mun = as.factor(code_muni), .keep = "unused") %>% 
+  rename(u5mort_2010 = u5mort_2010.x) %>% 
+  glimpse() -> tab_socioeconomic
+
+##tabela geral----
+hexGrid_mun %>% 
+  st_drop_geometry() %>% 
+  rename(hex_id = id,
+         code_mun = GEOCODIG_M) %>% 
+  mutate(code_mun = as.factor(code_mun)) %>% 
+  left_join(y = hexGrid_forest_2006, by = c("hex_id" = "id")) %>% 
+  left_join(y = hexGrid_forest_2017, by = c("hex_id" = "id")) %>% 
+  left_join(y = popRur_2006, by = c("hex_id" = "id")) %>% 
+  left_join(y = popRur_2017, by = c("hex_id" = "id")) %>% 
+  left_join(y = popUrb_2006, by = c("hex_id" = "id")) %>% 
+  left_join(y = popUrb_2017, by = c("hex_id" = "id")) %>% 
+  left_join(y = hexGrid_pib) %>% 
+  left_join(y = tab_socioeconomic) %>% 
+  mutate(hex_id = as.factor(hex_id)) %>% 
+  glimpse -> tabela_bruta
+
+#table_analysis----
+tabela_bruta %>% 
+  mutate(forest_areaH_change = forest_areaHa_2017 - forest_areaHa_2006, .keep = "unused") %>% 
+  mutate(forest_perc_change = forest_perc_2017 - forest_perc_2006, .keep = "unused") %>% 
+  mutate(popRur_perc_change = round(((popRur_2017 - (popRur_2006+1))/(popRur_2006+1))*100, digits = 2), .keep = "unused") %>% 
+  mutate(popRur_perc_change = if_else(condition = popRur_perc_change == 100 | popRur_perc_change == -100, true = 0, false = popRur_perc_change)) %>% 
+  mutate(popUrb_change = popUrb_2017 - popUrb_2006, .keep = "unused") %>%
+  mutate(percpib_agro_2006 = (pibAgro_2006/pibTot_2006)*100,
+         percpib_agro_2017 = (pibAgro_2017/pibTot_2017)*100,
+         percpib_ind_2006 = (pinInd_2006/pibTot_2006)*100,
+         percpib_ind_2017 = (pibInd_2017/pibTot_2017)*100,
+         percpib_servPriv_2006 = (pibServPriv_2006/pibTot_2006)*100,
+         percpib_servPriv_2017 = (pibServPriv_2017/pibTot_2017)*100,
+         percpib_servPub_2006 = (pibServPub_2006/pibTot_2006)*100,
+         percpib_servPub_2017 = (pibServPub_2017/pibTot_2017)*100, .keep = "unused") %>%
+  mutate(pibAgro_perc_change = round(percpib_agro_2017 - percpib_agro_2006, digits = 2),
+         pibInd_perc_change = round(percpib_ind_2017 - percpib_ind_2006, digits = 2),
+         pibServPriv_perc_change = round(percpib_servPriv_2017 - percpib_servPriv_2006, digits = 2),
+         pibServPub_perc_change = round(percpib_servPub_2017 - percpib_servPub_2006, digits = 2), .keep = "unused") %>%
+  mutate(expov_perc_change = expov_2010 - expov_2000,
+         gini_change = gini_2010 - gini_2000,
+         u5mort_change = u5mort_2010 - u5mort_2000, .keep = "unused") %>%
+  mutate(hexGrid_quad = if_else( #based in quantiles (10%), see below
+      condition = popRur_perc_change > pop_gain_10 & forest_perc_change > forest_gain_10,
+      true = "GG",
+      false = if_else(
+        condition = popRur_perc_change > pop_gain_10 & forest_perc_change < (forest_loss_10*-1),
+        true = "GP",
+        false = if_else(
+          condition = popRur_perc_change < (pop_loss_10*-1) & forest_perc_change > forest_gain_10,
+          true = "PG",
+          false = if_else(
+            condition = popRur_perc_change < (pop_loss_10*-1) & forest_perc_change < (forest_loss_10*-1),
+            true = "PP",
+            false = "stable"
+          )
+        )
+      )
+    )
   ) %>%
-  right_join(y= tab_1) %>% 
-  glimpse -> tab_1
+  glimpse -> table_analysis
 
-##variable names and type----
-tab_1 %>% 
-  mutate(plot_id = as.factor(plot_id)) %>% 
-  left_join(y=buff_codes, by = c("plot_id" = "id_buff")) %>% 
-  rename(buff_id = plot_id,
-         geom_centroid_buff = geometry,
-         code_muni = GEOCODIG_M,
-         code_sc = CD_SETOR_m,
-         code_uf = CD_UF_max) %>% 
-  mutate(buff_id = as.factor(buff_id),
-         code_muni = as.factor(code_muni),
-         code_sc = as.factor(code_sc),
-         code_uf = as.factor(code_uf)) %>% 
-  glimpse -> tab_1
+##mean change per municipality----
+table_analysis %>% 
+  group_by(code_mun) %>% 
+  summarise(meanMun_forest_change = mean(forest_perc_change),
+            sdMun_forest_change = sd(forest_perc_change),
+            meanMun_popRur_change = mean(popRur_perc_change),
+            sdMun_popRur_change = sd(popRur_perc_change)) %>% 
+  mutate(mun_quad = if_else( #based on quantile. See below
+           condition = meanMun_popRur_change > mun_pop_gain_10 & meanMun_forest_change > mun_fores_gain_10,
+         true = "GG",
+         false = if_else(
+           condition = meanMun_popRur_change > mun_pop_gain_10 & meanMun_forest_change < (mun_fores_loss_10*-1),
+           true = "GP",
+           false = if_else(
+             condition = meanMun_popRur_change < (mun_pop_loss_10*-1) & meanMun_forest_change > mun_fores_gain_10,
+             true = "PG",
+             false = if_else(
+               condition = meanMun_popRur_change < (mun_pop_loss_10*-1) & meanMun_forest_change < (mun_fores_loss_10*-1),
+               true = "PP",
+               false = "stable"))))) %>%
+  glimpse -> table_change_mun
 
-##Family agriculture----
-table_agrifamiliar_2006 %>% 
-  select(-2) %>%
-  mutate (code_muni = as.factor(code_muni),
-          perc_agrifam_06 = (familyAgri/total_estab)*100,
-          perc_N_agrifam_06 = (Non_familyAgri/total_estab)*100) %>%
-  rename(total_estab_06 = total_estab,
-         N_agrifam_06 = Non_familyAgri,
-         agrifam_06 = familyAgri) %>%
-  left_join(y = table_agrifamiliar_area_2006) %>%
-  select(-name_muni) %>%
-  mutate(perc_area_agrifam_06 = (as.double(familyAgri_area)/area_estab)*100,
-         perc_area_N_agrifam_06 = (Non_familyAgri_area/area_estab)*100
-         ) %>%
-  rename(area_estab_06 = area_estab,
-         N_agrifam_area_06 = Non_familyAgri_area,
-         agrifam_area_06 = familyAgri_area) %>%
-  left_join(y= table_agrifamiliar_2017) %>%
-  filter(!is.na(name_muni)) %>% 
-  select(-name_muni) %>%
-  mutate (perc_agrifam_17 = (total_agri_familiar_17/total_estab_17)*100,
-          perc_N_agrifam_17 = (total_agri_Nfamiliar_17/total_estab_17)*100) %>%
-  rename(N_agrifam_17 = total_agri_Nfamiliar_17,
-         agrifam_17 = total_agri_familiar_17) %>%
-  left_join(y= table_agrifamiliar_area_2017) %>%
-  select(-name_muni) %>%
-  mutate(perc_area_agrifam_17 = (area_agri_familiar_17/area_estab_17)*100,
-         perc_area_N_agrifam_17 = (area_agri_Nfamiliar_17/area_estab_17)*100) %>% 
-  rename(N_agrifam_area_17 = area_agri_Nfamiliar_17 ,
-         agrifam_area_17 = area_agri_familiar_17) %>%
-  glimpse -> tab_agrifam
+table_analysis %>% 
+  left_join(y = table_change_mun) %>% 
+  glimpse -> table_analysis
 
-tab_1 %>% 
-  left_join(y = tab_agrifam) %>% 
-  select(-N_agrifam_06, -perc_N_agrifam_06, -N_agrifam_area_06, -perc_area_N_agrifam_06,
-         -N_agrifam_17, -perc_N_agrifam_17, -N_agrifam_area_17, -perc_area_N_agrifam_17) %>% 
-  glimpse -> tab_1
+##finding the stable units----
+###using SD----
+# table_analysis %>% 
+#   filter(hex_id != 17549) %>% 
+#   select(hex_id, forest_perc_change, popRur_perc_change) %>% 
+#   reframe(threshold_up_forest = mean(forest_perc_change) + sd(forest_perc_change),
+#          threshold_low_fores = mean(forest_perc_change) - sd(forest_perc_change),
+#          threshold_up_pop = mean(popRur_perc_change, na.rm = T) + sd(popRur_perc_change, na.rm = T),
+#          threshold_low_pop = mean(popRur_perc_change, na.rm = T) - sd(popRur_perc_change, na.rm = T)) %>% 
+#   glimpse()
 
-pop_rural_2006 %>% 
-  select(id_buff, popsum) %>% 
-  rename(buff_id = id_buff,
-         pop_rural_WP_06 = popsum,
-         geom_buff = geometry) %>% 
-  left_join(y = tibble(pop_rural_2017), by = c("buff_id" = "id_buff")) %>% 
-  select(buff_id, pop_rural_WP_06, pop_sum, geom_buff) %>% 
-  rename(pop_rural_WP_17 = pop_sum) %>% 
-  glimpse -> table_pop
+### using quantiles----
+table_analysis %>% 
+  select(hex_id, forest_perc_change) %>% 
+  filter(forest_perc_change > 0) %>% 
+  glimpse -> table_forestGain
+quantile(table_forestGain$forest_perc_change, 0.25) -> forest_gain_10
 
-tab_1 %>% 
-  left_join(y = table_pop) %>% 
-  mutate(code_muni = as.double(code_muni)) %>% 
-  left_join(y = select(br_mun, code_muni, geom)) %>% 
-  rename(geom_mun = geom) %>% 
-  glimpse() -> tab_1
+table_analysis %>% 
+  select(hex_id, forest_perc_change) %>% 
+  filter(forest_perc_change < 0) %>% 
+  glimpse -> table_forestLoss
+quantile(table_forestLoss$forest_perc_change*-1, 0.25) -> forest_loss_10
 
-dist_sede %>% 
-  tibble() %>%
-  select(-geometry, -TargetID) %>% 
-  rename(buff_id = InputID,
-         dist_near_sede = Distance) %>% 
-  right_join(y = tab_1, by = "buff_id") %>% 
-  glimpse ->tab_1
+table_analysis %>% 
+  select(hex_id, popRur_perc_change) %>% 
+  filter(popRur_perc_change > 0) %>% 
+  glimpse -> table_popGain
+quantile(table_popGain$popRur_perc_change, 0.25) -> pop_gain_10
 
-pop_urb_2006 %>% 
-  select(CD_SETOR, pop_sum, CD_MUN) %>% 
-  tibble() %>% 
-  select(-geometry) %>% 
-  rename(pop_urb_06 = pop_sum) %>% 
-  left_join(pop_urb_2017, by = c("CD_SETOR", "CD_MUN")) %>% 
-  select(CD_SETOR, pop_urb_06, pop_sum, CD_MUN) %>% 
-  rename(pop_urb_17 = pop_sum) %>%
-  group_by(CD_MUN) %>% 
-  summarise(pop_urb_mun_06 = sum(pop_urb_06),
-            pop_urb_mun_17 = sum(pop_urb_17)
-            ) %>% 
-  glimpse -> pop_urb
+table_analysis %>% 
+  select(hex_id, popRur_perc_change) %>% 
+  filter(popRur_perc_change < 0) %>% 
+  glimpse -> table_popLoss
+quantile(table_popLoss$popRur_perc_change*-1, 0.25) -> pop_loss_10
 
-tab_1 %>% 
-  mutate(code_muni = as.factor(code_muni)) %>% 
-  left_join(y = pop_urb, by = c("code_muni" = "CD_MUN")) %>% 
-  glimpse -> tab_1
+table_change_mun %>% 
+  select(code_mun,meanMun_forest_change) %>% 
+  filter(meanMun_forest_change > 0) %>% 
+  glimpse -> mun_forestGain
+quantile(mun_forestGain$meanMun_forest_change, 0.25) -> mun_fores_gain_10
 
-tab_1 %>%
-  mutate(vari_perc_nvc = pland_nvc_17 - pland_nvc_06,
-         vari_area_nvc = ca_nvc_17 - ca_nvc_06,
-         vari_total_pop_rural = pop_rural_WP_17 - pop_rural_WP_06,
-         vari_perc_pop_rural = (pop_rural_WP_17/pop_rural_WP_06)*100-100,
-         vari_estab_agrifam = agrifam_17 - agrifam_06,
-         vari_perc_estab_agrifam= perc_agrifam_17 - perc_agrifam_06,
-         vari_area_agrifam = area_estab_17 - area_estab_06,
-         vari_perc_area_agrifam = perc_area_agrifam_17 - perc_area_agrifam_06,
-         vari_total_pop_urb = pop_urb_mun_17 - pop_urb_mun_06,
-         vari_perc_pop_urb = (pop_urb_mun_17/pop_urb_mun_06)*100-100
-           ) %>% 
-  glimpse ->tab_1
+table_change_mun %>% 
+  select(code_mun,meanMun_forest_change) %>% 
+  filter(meanMun_forest_change < 0) %>% 
+  glimpse -> mun_forestLoss
+quantile(mun_forestLoss$meanMun_forest_change*-1, 0.25) -> mun_fores_loss_10
 
-tab_1 %>%
-  mutate(cat_change = if_else(condition = vari_perc_nvc==0 | vari_perc_pop_rural==0,
-                              true = "estable",
-                              false = if_else(condition = vari_perc_nvc<0 & vari_perc_pop_rural<0,
-                                              true = "PP",
-                                              false = if_else(condition =  vari_perc_nvc<0 & vari_perc_pop_rural>0,
-                                                              true = "PG",
-                                                              false = if_else(vari_perc_nvc>0 & vari_perc_pop_rural>0,
-                                                                              true = "GG",
-                                                                              false = "GP"
-                                                                              )
-                                                              )
-                                              )
-                              )
-         ) %>% 
-  glimpse ->tab_1
+table_change_mun %>% 
+  select(code_mun,meanMun_popRur_change) %>% 
+  filter(meanMun_popRur_change > 0) %>% 
+  glimpse -> mun_popGain
+quantile(mun_popGain$meanMun_popRur_change, 0.25) -> mun_pop_gain_10
+
+table_change_mun %>% 
+  select(code_mun,meanMun_popRur_change) %>% 
+  filter(meanMun_popRur_change < 0) %>% 
+  glimpse -> mun_popLoss
+quantile(mun_popLoss$meanMun_popRur_change*-1, 0.25) -> mun_pop_loss_10
 
 
-mean(tab_1$vari_perc_nvc) + sd(tab_1$vari_perc_nvc)
-mean(tab_1$vari_perc_nvc) - sd(tab_1$vari_perc_nvc)
 
-tab_1 %>% 
-  mutate(sd_cat = if_else(condition = vari_perc_nvc > 8.849359, true = "outlier",
-                          false = if_else(vari_perc_nvc < -7.384349,
-                                          true = "outlier",
-                                          false = "non-outlier"))) %>% 
-  glimpse -> tab_1
-
-tab_1 %>% 
-  select(-geom_centroid_buff, -geom_buff, - geom_mun) %>% 
-  glimpse -> tab_1
-
-mean(tab_1$vari_perc_pop_rural, na.rm=T) + sd(tab_1$vari_perc_pop_rural, na.rm=T)
-mean(tab_1$vari_perc_pop_rural, na.rm=T) - sd(tab_1$vari_perc_pop_rural, na.rm=T)
-
-tab_1 %>% 
-  mutate(pop_outlier = if_else(condition = vari_perc_pop_rural > 51.09549,
-                               true = "outlier",
-                          false = if_else(vari_perc_pop_rural < -29.51439,
-                                          true = "outlier",
-                                          false = "non-outlier"))) %>% 
-  glimpse-> tab_1
-
-rename(tab_1, nvc_outlier = sd_cat) %>% glimpse -> tab_1
-
-tab_1 %>% 
-  mutate(vari_shdi = shdi_17 - shdi_06) %>% 
-  glimpse -> tab_1
-
-#export----
-#write.csv(x = tab_1, file = here("tabela_geral.csv"))
+#exports----
+#write_xlsx(x = tabela_bruta, path = here("data/tabela_bruta.xlsx"))
+write_xlsx(x = table_analysis, path = here("data/table_analysis.xlsx"))
