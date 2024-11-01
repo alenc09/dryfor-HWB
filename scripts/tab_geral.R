@@ -253,4 +253,4 @@ quantile(mun_popLoss$meanMun_popRur_change*-1, 0.25) -> mun_pop_loss_10
 
 #exports----
 #write_xlsx(x = tabela_bruta, path = here("data/tabela_bruta.xlsx"))
-write_xlsx(x = table_analysis, path = here("data/table_analysis.xlsx"))
+#write_xlsx(x = table_analysis, path = here("data/table_analysis.xlsx"))

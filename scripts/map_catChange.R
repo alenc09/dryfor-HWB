@@ -8,12 +8,16 @@ library(dplyr)
 library(sf)
 library(ggplot2)
 library(ggpubr)
+library(cowplot)
 
 #data----
-read.csv(file = here("data/tabela_geral.csv"))-> tab_geral
+read_xlsx(here("data/table_analysis.xlsx"))-> tab_analysis
+
 read_municipality(simplified = F)-> mun_br
+
 read_biomes() %>% 
   filter (name_biome == "Caatinga") -> caat_shp
+
 read_state() -> br_states
 
 
@@ -24,58 +28,67 @@ st_transform(x = br_states, crs = 5880) -> br_states
 mun_br[caat_shp,] -> mun_caat
 br_states[caat_shp,] -> states_caat
 
-#mapa----
-tab_geral %>%
-  group_by(code_muni) %>%
-  summarise(
-    mean_pop_change = mean(vari_perc_pop_rural),
-    mean_nvc_change = mean(vari_perc_nvc),
-    cat_change = cat_change) %>% 
-  mutate(
-    cat_change = if_else(
-      condition = mean_nvc_change > 0 & mean_pop_change > 0,
-      true = "GG",
-      false = if_else(
-        condition = mean_nvc_change > 0 & mean_pop_change < 0,
-        true = "GP",
-        false = if_else(
-          condition =  mean_nvc_change < 0 & mean_pop_change > 0,
-          true = "PG",
-          false = if_else(
-            mean_nvc_change < 0 & mean_pop_change < 0,
-            true = "PP",
-            false = "stable"
-          )
-        )
-      )
-    )
-  ) %>%
-  distinct() %>% 
-  filter(cat_change != "stable") %>%
-  right_join(y = mun_caat) %>% 
+##organization----
+hexGrid_landcover_2006 %>% 
+  select(id) %>% 
+  mutate(id = as.character(id)) %>% 
+  left_join(y = tab_analysis, by = c("id" = "hex_id")) %>% 
+  select(id, code_mun, hexGrid_quad, mun_quad) %>% 
+  st_as_sf(tab_cat_change) %>% 
+  st_transform(crs=4674) %>% 
+  mutate(hexGrid_quad = factor(hexGrid_quad, levels = c("GG", "GP", "PG", "PP", "stable")),
+         mun_quad = factor(mun_quad, levels = c("GG", "GP", "PG", "PP", "stable"))) %>% 
   glimpse -> tab_cat_change
 
-st_as_sf(tab_cat_change) %>% 
-  st_transform(crs=4674) ->tab_cat_change
+tab_cat_change %>% 
+  select(code_mun, mun_quad) %>% 
+  as.data.frame() %>% 
+  mutate(code_mun = as.double(code_mun)) %>% 
+  left_join(mun_caat, by = c("code_mun" = "code_muni")) %>% 
+  select(code_mun, mun_quad, geom) %>% 
+  unique() %>% 
+  st_as_sf() %>% 
+  st_transform(crs=4674) %>% 
+  glimpse -> tab_mun_quad
 
+#mapa----
+##hexGrid----
 tab_cat_change %>% 
 ggplot() +
-  geom_sf(aes(geometry = geom, fill = cat_change), linewidth = 0.2, color = "grey") +
+  geom_sf(aes(geometry = geometry, fill = hexGrid_quad), linewidth = 0) +
   scale_fill_manual(
-    values = c("#018571", "#80cdc1", "#dfc27d", "#a6611a"),
-    name = "Forest-People",
-    label = c("gain-gain", "gain-lose", "lose-gain", "lose-lose"),
-    na.value = "grey90")+
-  geom_sf(data = states_caat[-1,], fill="transparent", linewidth=0.3)+
+    values = c("#018571", "#80cdc1", "#dfc27d", "#a6611a", "grey90"),
+    name = "people-forest",
+    label = c("gain-gain", "gain-lose", "lose-gain", "lose-lose", "stable")) +
+  geom_sf(data = states_caat[-1,], fill="transparent", linewidth=0.3) +
   coord_sf(xlim = c(-48, -34), ylim = c(-17.1, -3))+
   geom_text(data = states_caat[-1,], aes(x= c(-42, -39.5,-36.5,-35.5, -34.5, -34.4, -36, -39,-42.4),
                                          y = c(-16.8, -15, -11, -10, -8.5, -7, -4.7, -2.9, -5),
                                          label = c("MG", "BA", "SE", "AL", "PE", "PB", "RN", "CE", "PI")),
-            size = 2)+
-  theme_map()+
+            size = 2) +
+  theme_map(line_size = 1) +
+  theme(legend.title = element_text(size = 10),
+  legend.text = element_text(size = 8),
+  legend.position = c(0.8, 0.2))  -> map_hexGrid_quad
+
+##mun----
+tab_mun_quad %>% 
+  ggplot() +
+  geom_sf(aes(geometry = geom, fill = mun_quad), linewidth = 0) +
+  scale_fill_manual(
+    values = c("#018571", "#80cdc1", "#dfc27d", "#a6611a", "grey90"),
+    name = "people-forest",
+    label = c("gain-gain", "gain-lose", "lose-gain", "lose-lose", "stable")) +
+  geom_sf(data = states_caat[-1,], fill="transparent", linewidth=0.3) +
+  coord_sf(xlim = c(-48, -34), ylim = c(-17.1, -3))+
+  geom_text(data = states_caat[-1,], aes(x= c(-42, -39.5,-36.5,-35.5, -34.5, -34.4, -36, -39,-42.4),
+                                         y = c(-16.8, -15, -11, -10, -8.5, -7, -4.7, -2.9, -5),
+                                         label = c("MG", "BA", "SE", "AL", "PE", "PB", "RN", "CE", "PI")),
+            size = 2) +
+  theme_map(line_size = 1) +
   theme(legend.title = element_text(size = 10),
         legend.text = element_text(size = 8),
-        legend.position = c(0.8, 0.2)) -> map_category_change
+        legend.position = c(0.8, 0.2))
 
 #map inset####
 # #Inset map####
@@ -86,17 +99,17 @@ ggplot() +
 #   theme_map() -> inset_map
 
 #Figure map----
-source(file = here("scripts/map_fpp.R"))
-ggarrange(map_fpp_change_inset, map_category_change, labels = c("a)", "b)")) -> fig_map
-
-ggsave(plot=fig_map, filename = here("img/fig_map.jpg"),
-       dpi = 300,
-       bg = "white",
-       width = 9)
-      
-source(file = here("scripts/fpp_nvc.R"))
-plot_grid(pop_nvc_all, map_category_change, labels = "auto") %>% 
-  ggsave(plot = ., filename = here("img/fig_catChange.jpg"),
-         width = 8,
-         height = 4,
-         bg="white")
+# source(file = here("scripts/map_fpp.R"))
+# ggarrange(map_fpp_change_inset, map_category_change, labels = c("a)", "b)")) -> fig_map
+# 
+# ggsave(plot=fig_map, filename = here("img/fig_map.jpg"),
+#        dpi = 300,
+#        bg = "white",
+#        width = 9)
+#       
+# source(file = here("scripts/fpp_nvc.R"))
+# plot_grid(pop_nvc_all, map_category_change, labels = "auto") %>% 
+#   ggsave(plot = ., filename = here("img/fig_catChange.jpg"),
+#          width = 8,
+#          height = 4,
+#          bg="white")
